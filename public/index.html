@@ -11,18 +11,18 @@
 
 <style>
   :root{
-    --paper:#f6f5f0;
-    --paper-2:#ecebde;
-    --ink:#2e3a30;
-    --ink-soft:#6b7a6e;
-    --ink-mute:#9aa79b;
-    --sage-deep:#5a6b5d;
-    --sage:#8a9a8b;
-    --sage-light:#bcc8b8;
-    --sage-wash:#d6dfd0;
-    --accent:#a8b8a0;
-    --line:rgba(46,58,48,.18);
-    --shadow:0 1px 0 rgba(255,255,255,.7) inset, 0 18px 60px -28px rgba(46,58,48,.25);
+    --paper:#fff8e1;
+    --paper-2:#f4e7b3;
+    --ink:#3f3420;
+    --ink-soft:#7c6842;
+    --ink-mute:#aa925f;
+    --sage-deep:#b88720;
+    --sage:#d6ad45;
+    --sage-light:#f1d06f;
+    --sage-wash:#fae9a6;
+    --accent:#e0b94f;
+    --line:rgba(63,52,32,.18);
+    --shadow:0 1px 0 rgba(255,255,255,.7) inset, 0 18px 60px -28px rgba(63,52,32,.22);
     --serif:"Cormorant Garamond", "Cormorant", "Times New Roman", serif;
     --display:"Italiana", "Cormorant Garamond", serif;
     --script:"Pinyon Script", "Snell Roundhand", cursive;
@@ -47,8 +47,8 @@
     pointer-events:none;
     z-index:0;
     background-image:
-      radial-gradient(rgba(46,58,48,.04) 1px, transparent 1px),
-      radial-gradient(rgba(46,58,48,.03) 1px, transparent 1px);
+      radial-gradient(rgba(63,52,32,.04) 1px, transparent 1px),
+      radial-gradient(rgba(63,52,32,.03) 1px, transparent 1px);
     background-size: 3px 3px, 7px 7px;
     background-position: 0 0, 1px 2px;
     opacity:.55;
@@ -138,7 +138,7 @@
     position:fixed; top:0; left:0; right:0; z-index:50;
     display:flex; align-items:center; justify-content:space-between;
     padding:18px 28px;
-    background:linear-gradient(to bottom, rgba(246,245,240,.85), rgba(246,245,240,0));
+    background:linear-gradient(to bottom, rgba(255,248,225,.85), rgba(255,248,225,0));
     backdrop-filter: blur(4px);
   }
   .top-nav .brand{ font-family:var(--display); font-size:15px; letter-spacing:.24em; text-transform:uppercase; }
@@ -172,7 +172,7 @@
     position:fixed; left:18px; bottom:18px; z-index:40;
     height:42px; padding:0 18px;
     border-radius:999px;
-    background:rgba(46,58,48,.92);
+    background:rgba(63,52,32,.92);
     backdrop-filter:blur(12px);
     border:1px solid rgba(255,255,255,.15);
     cursor:pointer;
@@ -190,7 +190,7 @@
     position:relative; z-index:2;
     padding:48px 24px 64px;
     border-top:1px solid var(--line);
-    background:rgba(236,235,222,.45);
+    background:rgba(244,231,179,.45);
     backdrop-filter:blur(4px);
   }
   .site-footer .inner{
@@ -209,7 +209,7 @@
   .site-footer .admin-link:hover{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
 
   /* modal */
-  .modal-back{ position:fixed; inset:0; background:rgba(20,28,22,.45); backdrop-filter:blur(6px); z-index:200; display:flex; align-items:center; justify-content:center; padding:24px; }
+  .modal-back{ position:fixed; inset:0; background:rgba(63,52,32,.45); backdrop-filter:blur(6px); z-index:200; display:flex; align-items:center; justify-content:center; padding:24px; }
   .modal{
     background:var(--paper); border:1px solid var(--line);
     max-width:560px; width:100%; max-height:90vh; overflow-y:auto;
@@ -222,7 +222,7 @@
   }
 
   /* lightbox */
-  .lb-back{ position:fixed; inset:0; background:rgba(20,28,22,.92); z-index:300; display:flex; align-items:center; justify-content:center; }
+  .lb-back{ position:fixed; inset:0; background:rgba(63,52,32,.92); z-index:300; display:flex; align-items:center; justify-content:center; }
   .lb-img{ max-width:92vw; max-height:88vh; object-fit:contain; box-shadow:0 30px 80px rgba(0,0,0,.6); }
   .lb-nav{ position:absolute; top:50%; transform:translateY(-50%); background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.3); color:#fff; width:48px; height:48px; border-radius:50%; font-size:18px; cursor:pointer; }
   .lb-prev{ left:24px; } .lb-next{ right:24px; }
@@ -242,7 +242,7 @@
   /* admin */
   .admin-panel{
     position:fixed; right:0; top:0; bottom:0; width:420px; z-index:250;
-    background:#fafaf6; border-left:1px solid var(--line);
+    background:#fffdf4; border-left:1px solid var(--line);
     box-shadow:-20px 0 80px -40px rgba(0,0,0,.3);
     display:flex; flex-direction:column;
     transform:translateX(100%); transition:transform .35s ease;
@@ -291,10 +291,10 @@
 <!-- preview thumbnail for bundler -->
 <template id="__bundler_thumbnail">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 140">
-    <rect width="200" height="140" fill="#f6f5f0"/>
-    <circle cx="60" cy="55" r="40" fill="#bcc8b8" opacity="0.55"/>
-    <circle cx="130" cy="80" r="34" fill="#8a9a8b" opacity="0.5"/>
-    <text x="100" y="78" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="22" fill="#2e3a30">A &amp; A</text>
+    <rect width="200" height="140" fill="#fff8e1"/>
+    <circle cx="60" cy="55" r="40" fill="#f1d06f" opacity="0.55"/>
+    <circle cx="130" cy="80" r="34" fill="#d6ad45" opacity="0.5"/>
+    <text x="100" y="78" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="22" fill="#3f3420">A &amp; A</text>
   </svg>
 </template>
 
