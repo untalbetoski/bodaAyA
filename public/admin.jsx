@@ -259,7 +259,7 @@ function AdminLogin({ onSuccess, onClose, expected, L, lang }) {
             <button className="btn btn-filled" type="submit" disabled={busy}>{busy ? "…" : L.admin_enter}</button>
           </div>
           <div className="micro" style={{ color:"var(--ink-mute)", textAlign:"center", marginTop:8 }}>
-            {lang==="es"?"Pista (demo): ":"Hint (demo): "}<code style={{ fontFamily:"ui-monospace, monospace" }}>boda2027</code>
+            {lang==="es"?"Pista (demo): ":"Hint (demo): "}<code style={{ fontFamily:"ui-monospace, monospace" }}>solo tu lo sabes</code>
           </div>
         </form>
       </div>
