@@ -1,6 +1,6 @@
 // app.jsx — root app
 
-const { useState: useStateApp, useEffect: useEffectApp, useMemo: useMemoApp, useCallback: useCallbackApp } = React;
+const { useState: useStateApp, useEffect: useEffectApp, useMemo: useMemoApp, useCallback: useCallbackApp, useRef: useRefApp } = React;
 
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "mode": "classic",
@@ -45,7 +45,6 @@ function applyFontPair(pair) {
   }
 }
 
-// inject extra google font for italianno
 (function(){
   const link = document.createElement("link");
   link.rel = "stylesheet";
@@ -105,28 +104,59 @@ function NavBar({ lang, setLang, L }) {
 }
 
 function App() {
-  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const [t, rawSetTweak] = useTweaks(TWEAK_DEFAULTS);
   const [lang, setLang] = useStateApp("es");
   const [data, setData] = useStateApp(DEFAULT_DATA);
   const [dirty, setDirty] = useStateApp(false);
-  const [saveState, setSaveState] = useStateApp("saved"); // idle | saving | saved | unsaved
+  const [saveState, setSaveState] = useStateApp("saved");
   const [adminOpen, setAdminOpen] = useStateApp(false);
   const [adminLogin, setAdminLogin] = useStateApp(false);
   const [adminAuthed, setAdminAuthed] = useStateApp(false);
+  const [loaded, setLoaded] = useStateApp(false);
+  const autosaveTimer = useRefApp(null);
+  const lastSavedJson = useRefApp("");
 
   const L = I18N[lang];
 
-  // load content from mock server on boot
+  const buildPayload = useCallbackApp((content = data, tweaks = t) => ({
+    ...content,
+    _tweaks: {
+      ...TWEAK_DEFAULTS,
+      ...(content?._tweaks || {}),
+      ...(tweaks || {}),
+    },
+  }), [data, t]);
+
+  const setTweak = useCallbackApp((key, value) => {
+    rawSetTweak(key, value);
+    setDirty(true);
+    setSaveState("unsaved");
+  }, [rawSetTweak]);
+
   useEffectApp(() => {
+    let alive = true;
     MockServer.getContent().then(r => {
-      if (r.ok && r.data) setData(r.data);
+      if (!alive) return;
+      const remoteData = (r.ok && r.data) ? r.data : DEFAULT_DATA;
+      setData(remoteData);
+
+      if (remoteData?._tweaks) {
+        const mergedTweaks = { ...TWEAK_DEFAULTS, ...remoteData._tweaks };
+        Object.entries(mergedTweaks).forEach(([key, value]) => rawSetTweak(key, value));
+      }
+
+      lastSavedJson.current = JSON.stringify(buildPayload(remoteData, remoteData?._tweaks || t));
+      setSaveState("saved");
+      setDirty(false);
+      setLoaded(true);
+    }).catch(() => {
+      setLoaded(true);
     });
+    return () => { alive = false; };
   }, []);
 
-  // apply palette / fonts / mode reactively
   useEffectApp(() => {
-    // map TweakColor palette array → named palette
-    const [paper, deep] = t.palette;
+    const [paper, deep] = t.palette || [];
     let key = "sage";
     Object.entries(PALETTES).forEach(([k,v]) => {
       if (v.paper === paper && v.deep === deep) key = k;
@@ -146,11 +176,47 @@ function App() {
     setSaveState("unsaved");
   }, []);
 
-  const onSave = useCallbackApp(async () => {
+  const saveNow = useCallbackApp(async (content = data, tweaks = t) => {
+    const payload = buildPayload(content, tweaks);
+    const json = JSON.stringify(payload);
+    if (json === lastSavedJson.current) {
+      setSaveState("saved");
+      setDirty(false);
+      return { ok:true, skipped:true };
+    }
     setSaveState("saving");
-    const r = await MockServer.saveContent(data);
-    if (r.ok) { setSaveState("saved"); setDirty(false); }
-  }, [data]);
+    const r = await MockServer.saveContent(payload);
+    if (r.ok) {
+      lastSavedJson.current = json;
+      setData(payload);
+      setSaveState("saved");
+      setDirty(false);
+    } else {
+      setSaveState("unsaved");
+    }
+    return r;
+  }, [data, t, buildPayload]);
+
+  const onSave = useCallbackApp(async () => {
+    await saveNow(data, t);
+  }, [saveNow, data, t]);
+
+  useEffectApp(() => {
+    if (!loaded || !dirty) return;
+    clearTimeout(autosaveTimer.current);
+    autosaveTimer.current = setTimeout(() => {
+      saveNow(data, t);
+    }, 900);
+    return () => clearTimeout(autosaveTimer.current);
+  }, [loaded, dirty, data, t, saveNow]);
+
+  useEffectApp(() => {
+    const beforeUnload = () => {
+      if (dirty) saveNow(data, t);
+    };
+    window.addEventListener("beforeunload", beforeUnload);
+    return () => window.removeEventListener("beforeunload", beforeUnload);
+  }, [dirty, data, t, saveNow]);
 
   const openAdmin = useCallbackApp(() => {
     if (adminAuthed) setAdminOpen(true);
@@ -162,7 +228,6 @@ function App() {
     setAdminOpen(false);
   }, []);
 
-  // keyboard shortcut: ctrl+E / cmd+E to open admin
   useEffectApp(() => {
     const onKey = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "e") {
@@ -194,7 +259,6 @@ function App() {
         <ClosingSection data={data} L={L} lang={lang} />
       </main>
 
-      {/* small admin FAB — visible pill with label */}
       {t.showFAB && (
         <button className="admin-fab" onClick={openAdmin} title={lang==="es"?"Editar contenido (Ctrl+E)":"Edit content (Ctrl+E)"}>
           <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
