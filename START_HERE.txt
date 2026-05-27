@@ -1,0 +1,136 @@
+╔══════════════════════════════════════════════════════════════════════════╗
+║                                                                          ║
+║          🎉 BODA ANDREA & ALBERTO — GUÍA DE INICIO RÁPIDO 🎉            ║
+║                                                                          ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ 1️⃣  LEE ESTO PRIMERO                                                   ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+   📖 Abre y lee EN ORDEN:
+   
+   1. README.md                    ← Visión general
+   2. DEPLOYMENT_GUIDE.md          ← Cómo desplegar paso a paso
+   3. QUICK_COMMANDS.md            ← Comandos rápidos
+   4. PROJECT_STRUCTURE.md         ← Cómo está organizado todo
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ 2️⃣  PASOS PRINCIPALES                                                  ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+   A. CREAR REPOSITORIO EN GITHUB (15 min)
+      ├─ Ir a github.com
+      ├─ Crear nuevo repo llamado: boda-andrea-alberto
+      ├─ Hacer PUBLIC
+      └─ Seguir: DEPLOYMENT_GUIDE.md → PASO 1
+
+   B. DESPLEGAR EN VERCEL (10 min)
+      ├─ Ir a vercel.com
+      ├─ Importar repositorio de GitHub
+      ├─ Click DEPLOY
+      └─ ¡Tu sitio estará en: https://boda-andrea-alberto.vercel.app!
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ 3️⃣  DESPUÉS DE DESPLEGAR                                               ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+   ✅ Verificar que funciona:
+      ├─ Abre: https://boda-andrea-alberto.vercel.app
+      ├─ Verifica: colores, textos, navegación OK
+      ├─ Presiona: Ctrl+E
+      ├─ Entra con: boda2027
+      └─ Edita algo, guarda, recarga — ¡debe persistir!
+
+   ✅ Probar funcionalidades:
+      ├─ RSVP → Envía confirmación
+      ├─ Playlist → Sugiere una canción
+      └─ Ver datos → Tab "RSVPs" en admin
+
+   ✅ Cambiar contenido:
+      ├─ Opción 1: Panel admin (fácil, en vivo)
+      ├─ Opción 2: Editar en GitHub → Redeploy automático
+      └─ Opción 3: Editar local → git push → Redeploy
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ 4️⃣  ARCHIVOS IMPORTANTES                                               ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+   📂 public/
+      ├─ index.html          ← Página principal
+      ├─ data.jsx            ← Contenido, i18n, APIs
+      ├─ app.jsx             ← Componente raíz React
+      ├─ sections.jsx        ← Vistas (Hero, Countdown, etc)
+      ├─ admin.jsx           ← Panel de administración
+      ├─ tweaks-panel.jsx    ← Personalizador
+      └─ utilities.jsx       ← Custom hooks
+
+   📄 Configuración:
+      ├─ package.json        ← Dependencias
+      ├─ server.js           ← Backend Express
+      └─ vercel.json         ← Config Vercel
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ 5️⃣  ACCESOS RÁPIDOS                                                    ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+   🔗 URLs:
+      └─ GitHub:   https://github.com
+      └─ Vercel:   https://vercel.com
+      └─ Local:    http://localhost:3000
+
+   🔐 Contraseña Admin:
+      └─ boda2027
+
+   📊 Checklist:
+      └─ Ver: CHECKLIST.md
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ 6️⃣  SI NECESITAS AYUDA                                                 ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+   ❌ Algo no funciona?
+   
+   1. Busca en DEPLOYMENT_GUIDE.md → "Troubleshooting"
+   2. Verifica consola (F12) para ver errores
+   3. Lee logs de Vercel: Deployments → [Deploy] → Logs
+   4. Ver QUICK_COMMANDS.md para debugging
+
+   🆘 Si todo falla:
+   
+   Paso 1: Reinstalar todo
+   $ rm -rf node_modules
+   $ npm install
+   $ npm start
+
+   Paso 2: Redeployar en Vercel
+   $ git push origin main
+   (Espera 2-3 minutos)
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ 🎯 TU PRÓXIMO PASO                                                     ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+   👉 Abre: DEPLOYMENT_GUIDE.md
+   
+      Sigue los pasos 1-4 en orden.
+      
+      ¡Debería tomar 30-40 minutos total!
+
+
+╔══════════════════════════════════════════════════════════════════════════╗
+║                                                                          ║
+║                  ✨ ¡QUE DISFRUTES TU BODA! ✨                          ║
+║                                                                          ║
+║                     Preguntas? Ver archivos .md                         ║
+║                                                                          ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+Última actualización: Mayo 27, 2026
