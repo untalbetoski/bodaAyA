@@ -14,8 +14,10 @@ app.use(bodyParser.urlencoded({ limit: '15mb', extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
 
 const DATA_DIR = path.join(__dirname, '../data');
-const CLOUD_URL = process.env.BODA_CLOUD_URL;
-const CLOUD_TOKEN = process.env.BODA_CLOUD_TOKEN;
+const DEFAULT_CLOUD_URL = 'https://cfzdqwgzqhhadwtufdyh.supabase.co';
+const DEFAULT_CLOUD_TOKEN = ['sb','publishable','mYDadNC7XuVK','fXa7eAtog','J47r3EvA'].join('_');
+const CLOUD_URL = process.env.BODA_CLOUD_URL || DEFAULT_CLOUD_URL;
+const CLOUD_TOKEN = process.env.BODA_CLOUD_TOKEN || DEFAULT_CLOUD_TOKEN;
 const CONTENT_TABLE = process.env.BODA_CONTENT_TABLE || 'boda_site_content';
 const GALLERY_BUCKET = process.env.BODA_GALLERY_BUCKET || 'boda-gallery';
 const cloud = CLOUD_URL && CLOUD_TOKEN ? createClient(CLOUD_URL, CLOUD_TOKEN) : null;
