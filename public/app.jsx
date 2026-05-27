@@ -4,16 +4,16 @@ const { useState: useStateApp, useEffect: useEffectApp, useMemo: useMemoApp, use
 
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "mode": "classic",
-  "palette": ["#fff1b8", "#d99a00", "#ffe071"],
+  "palette": ["#faf6ee", "#7b684b", "#dcc7a2"],
   "fontPair": "italiana-pinyon",
   "watercolorIntensity": 8,
   "showFAB": true
 }/*EDITMODE-END*/;
 
 const PALETTES = {
-  sage:   { paper:"#fff1b8", paper2:"#ffd966", deep:"#d99a00", main:"#f4c430", light:"#ffe071", wash:"#fff0a6" },
+  sage:   { paper:"#faf6ee", paper2:"#efe3cf", deep:"#7b684b", main:"#b79a6f", light:"#dcc7a2", wash:"#eadcc6" },
   rose:   { paper:"#faf6f4", paper2:"#f0e6e2", deep:"#8c5a5e", main:"#c08a8e", light:"#e0c4c6", wash:"#ecd6d8" },
-  bone:   { paper:"#f7f4ee", paper2:"#ece5d6", deep:"#6b5840", main:"#a89070", light:"#d4bc94", wash:"#e6d4b4" },
+  bone:   { paper:"#faf6ee", paper2:"#efe3cf", deep:"#7b684b", main:"#b79a6f", light:"#dcc7a2", wash:"#eadcc6" },
   midnight:{ paper:"#f1f2f5", paper2:"#dde0e6", deep:"#3c4860", main:"#6c7a98", light:"#a8b4c8", wash:"#c8d0e0" },
 };
 
