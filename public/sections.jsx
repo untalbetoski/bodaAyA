@@ -273,7 +273,7 @@ function EventsSection({ data, L, lang }) {
 
 // DRESS CODE ──────────────────────────────────────────────────────────────
 const DRESS_SWATCHES_DAY1 = [
-  { c:"#d6c8e0", l:"Lavanda" },
+  { c:"#ffbb7c", l:"Buff Orange" },
   { c:"#c8dccf", l:"Menta" },
   { c:"#c8d4e0", l:"Cielo" },
   { c:"#e0c8d4", l:"Lila" },
