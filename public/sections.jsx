@@ -274,7 +274,7 @@ function EventsSection({ data, L, lang }) {
 // DRESS CODE ──────────────────────────────────────────────────────────────
 const DRESS_SWATCHES_DAY1 = [
   { c:"#ffbb7c", l:"Naranja Anteado" },
-  { c:"#f6d0b4", l:"Melocotón" },
+  { c:"#f6d0b4", l:"Durazno" },
   { c:"#fdfd96", l:"Amarillo" },
   { c:"#fc6c85", l:"Sandía" },
   { c:"#ffb5c0", l:"Rosa" },
@@ -282,9 +282,9 @@ const DRESS_SWATCHES_DAY1 = [
 const DRESS_SWATCHES_DAY2 = [
   { c:"#f4ede2", l:"Ivory" },
   { c:"#c5a572", l:"Khaki" },
-  { c:"#b34f4f", l:"Granate" },
-  { c:"#3a6e8a", l:"Añil" },
-  { c:"#1a1a1a", l:"Negro" },
+  { c:"#e0cd95", l:"Crudo" },
+  { c:"#faf0e6", l:"Lino" },
+  { c:"#d3d3d3", l:"Gris" },
 ];
 
 function DressCard({ d, swatches, lang, L }) {
