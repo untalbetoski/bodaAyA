@@ -1,4 +1,80 @@
-// gallery-cloud.jsx — Cloud upload override for GalleryAdmin
+// gallery-cloud.jsx — Cloud upload override + icebreaker event patch
+
+const ICEBREAKER_EVENT = {
+  title_es: "Rompe hielo",
+  title_en: "Icebreaker",
+  iso: "2027-04-15T15:00:00-06:00",
+  date_es: "Jueves 15 de abril, 2027 · 15:00 h",
+  date_en: "Thursday, April 15th 2027 · 3:00 pm",
+  venue: "Mal de Amor",
+  address_es: "Santiago Matatlán, Oaxaca",
+  address_en: "Santiago Matatlán, Oaxaca",
+  map: "https://www.openstreetmap.org/export/embed.html?bbox=-96.4100,16.8400,-96.3800,16.8700&layer=mapnik&marker=16.8550,-96.3950",
+  note_es: "Tour por una mezcalera con costo de $750 MXN por persona, por si gustan acompañarnos antes de iniciar la celebración.",
+  note_en: "Mezcal distillery tour with a cost of $750 MXN per person, in case you would like to join us before the celebration begins."
+};
+
+(function patchIcebreakerData(){
+  if (window.DEFAULT_DATA) {
+    window.DEFAULT_DATA.icebreaker = window.DEFAULT_DATA.icebreaker || ICEBREAKER_EVENT;
+  }
+
+  if (window.MockServer && !window.MockServer.__icebreakerPatched) {
+    const originalGetContent = window.MockServer.getContent.bind(window.MockServer);
+    const originalSaveContent = window.MockServer.saveContent.bind(window.MockServer);
+
+    window.MockServer.getContent = async function(){
+      const result = await originalGetContent();
+      if (result && result.ok) {
+        const saved = result.data || {};
+        result.data = {
+          ...window.DEFAULT_DATA,
+          ...saved,
+          icebreaker: saved.icebreaker || ICEBREAKER_EVENT,
+          _tweaks: saved._tweaks || window.DEFAULT_DATA._tweaks
+        };
+      }
+      return result;
+    };
+
+    window.MockServer.saveContent = async function(data){
+      const next = {
+        ...window.DEFAULT_DATA,
+        ...(data || {}),
+        icebreaker: (data && data.icebreaker) || ICEBREAKER_EVENT
+      };
+      return originalSaveContent(next);
+    };
+
+    window.MockServer.__icebreakerPatched = true;
+  }
+})();
+
+if (typeof EventCard !== "undefined") {
+  function EventsSectionWithIcebreaker({ data, L, lang }) {
+    const current = { ...data, icebreaker: data.icebreaker || ICEBREAKER_EVENT };
+    return (
+      <section className="s" id="details">
+        <WatercolorStamp size={400} style={{ position:"absolute", top:"10%", right:"-10%", opacity:.4, transform:"rotate(-15deg)" }} />
+        <div className="inner" style={{ display:"flex", flexDirection:"column", gap:120 }}>
+          <SectionHead
+            kicker={L.program_kicker}
+            title={lang === "es" ? "Tres días para celebrar" : "Three days to celebrate"}
+            sub={lang === "es" ? "Comenzamos con un rompe hielo en una mezcalera antes de la ceremonia." : "We begin with an icebreaker at a mezcal distillery before the ceremony."}
+          />
+          <EventCard ev={current.icebreaker} side="left" lang={lang} L={L} />
+          <EventCard ev={current.ceremony} side="right" lang={lang} L={L} />
+          <EventCard ev={current.reception} side="left" lang={lang} L={L} />
+          {current.traditional && <EventCard ev={current.traditional} side="right" lang={lang} L={L} />}
+        </div>
+        <style>{`@media (max-width: 720px){ .ev-grid { grid-template-columns: 1fr !important; gap: 28px !important; } }`}</style>
+      </section>
+    );
+  }
+  try { EventsSection = EventsSectionWithIcebreaker; } catch(e) {}
+  window.EventsSection = EventsSectionWithIcebreaker;
+}
+
 function CloudGalleryAdmin({ data, onChange, lang, L }) {
   const refs = React.useRef({});
   const [busy, setBusy] = React.useState(null);
