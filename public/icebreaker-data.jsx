@@ -1,7 +1,7 @@
 // icebreaker-data.jsx — adds the pre-wedding icebreaker event and migrates saved content
 (function(){
   const ICEBREAKER_EVENT = {
-    title_es: "Rompe hielo",
+    title_es: "Rompe Hielo",
     title_en: "Icebreaker",
     iso: "2027-04-15T15:00:00-06:00",
     date_es: "Jueves 15 de abril, 2027 · 15:00 h",
