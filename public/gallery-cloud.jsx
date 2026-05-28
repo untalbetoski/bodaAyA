@@ -1,31 +1,82 @@
-// gallery-cloud.jsx — Cloud upload override + icebreaker event patch
+// gallery-cloud.jsx — Cloud upload override + icebreaker event patch + fixed dress swatches
 
-(function normalizeDressSwatches(){
+const FIXED_DRESS_SWATCHES_DAY1 = [
+  { c:"#ffbb7c", l:"Naranja Anteado" },
+  { c:"#f6d0b4", l:"Melocotón" },
+  { c:"#fdfd96", l:"Amarillo" },
+  { c:"#fc6c85", l:"Sandía" },
+  { c:"#ffb5c0", l:"Rosa" },
+];
+
+const FIXED_DRESS_SWATCHES_DAY2 = [
+  { c:"#f4ede2", l:"Ivory" },
+  { c:"#c5a572", l:"Khaki" },
+  { c:"#b34f4f", l:"Granate" },
+  { c:"#3a6e8a", l:"Añil" },
+  { c:"#1a1a1a", l:"Negro" },
+];
+
+(function addFixedDressCSS(){
   const style = document.createElement("style");
   style.textContent = `
-    #dress .dr-grid div[style*="border-radius: 50%"],
-    #dress .dr-grid div[style*="border-radius:\"50%\""] {
-      width: 44px !important;
-      height: 44px !important;
-      max-width: 44px !important;
-      min-width: 44px !important;
-      aspect-ratio: 1 / 1 !important;
-      margin: 0 auto !important;
-      flex: 0 0 44px !important;
-    }
-    @media (max-width: 720px){
-      #dress .dr-grid div[style*="border-radius: 50%"],
-      #dress .dr-grid div[style*="border-radius:\"50%\""] {
-        width: 40px !important;
-        height: 40px !important;
-        max-width: 40px !important;
-        min-width: 40px !important;
-        flex-basis: 40px !important;
-      }
-    }
+    #dress .dress-swatch-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;align-items:start;}
+    #dress .dress-swatch-item{min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;}
+    #dress .dress-color-dot{width:44px!important;height:44px!important;min-width:44px!important;max-width:44px!important;flex:0 0 44px!important;border-radius:50%!important;aspect-ratio:1/1!important;margin:0 auto!important;display:block!important;}
+    #dress .dress-swatch-label{width:100%;text-align:center;white-space:normal;overflow-wrap:anywhere;line-height:1.15;}
+    @media(max-width:720px){#dress .dress-color-dot{width:40px!important;height:40px!important;min-width:40px!important;max-width:40px!important;flex-basis:40px!important;}}
   `;
   document.head.appendChild(style);
 })();
+
+if (typeof Reveal !== "undefined" && typeof SectionHead !== "undefined") {
+  function FixedDressCard({ d, swatches, lang, L }) {
+    if (!d) return null;
+    return (
+      <Reveal>
+        <div style={{padding:"42px 36px 36px",border:"1px solid var(--line)",background:"rgba(255,255,255,.55)",height:"100%",display:"flex",flexDirection:"column",position:"relative"}}>
+          <div className="micro" style={{color:"var(--sage-deep)",marginBottom:14,letterSpacing:".28em"}}>{pickByLang(d,"day",lang)}</div>
+          <h3 className="display" style={{fontSize:"clamp(28px,3.2vw,40px)",margin:"0 0 6px",lineHeight:1.1,color:"var(--ink)"}}>{pickByLang(d,"code",lang)}</h3>
+          <p style={{fontSize:16,color:"var(--ink-soft)",lineHeight:1.7,fontStyle:"italic",margin:"18px 0 0"}}>{pickByLang(d,"desc",lang)}</p>
+          <div style={{marginTop:24,display:"flex",alignItems:"center",gap:14,padding:"12px 18px",border:"1px dashed var(--line)"}}>
+            <span className="micro" style={{color:"var(--sage-deep)",flexShrink:0}}>{L.dress_avoid}</span>
+            <span style={{fontSize:13.5,color:"var(--ink-soft)",lineHeight:1.5}}>{pickByLang(d,"avoid",lang)}</span>
+          </div>
+          <div className="dress-swatch-grid" style={{marginTop:"auto",paddingTop:32}}>
+            {swatches.map((sw,i)=>(
+              <div key={i} className="dress-swatch-item">
+                <div className="dress-color-dot" style={{background:sw.c,boxShadow:"inset 0 -6px 14px rgba(0,0,0,.08)"}}></div>
+                <div className="micro dress-swatch-label" style={{fontSize:8.5}}>{sw.l}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Reveal>
+    );
+  }
+
+  function FixedDressSection({ data, L, lang }) {
+    const hasDay2 = !!data.dress2;
+    return (
+      <section className="s" id="dress">
+        <div className="inner">
+          <SectionHead
+            kicker={L.dress_kicker}
+            title={hasDay2 ? (lang==="es"?"Dos códigos, dos celebraciones":"Two codes, two celebrations") : pickByLang(data.dress,"code",lang)}
+            sub={hasDay2 ? (lang==="es"?"Un código distinto para cada día.":"A different dress code for each day.") : ""}
+          />
+          <div className="dr-grid" style={{display:"grid",gridTemplateColumns:hasDay2?"1fr 1fr":"1fr",gap:28,maxWidth:hasDay2?980:640,margin:"0 auto"}}>
+            <FixedDressCard d={data.dress} swatches={FIXED_DRESS_SWATCHES_DAY1} lang={lang} L={L} />
+            {hasDay2 && <FixedDressCard d={data.dress2} swatches={FIXED_DRESS_SWATCHES_DAY2} lang={lang} L={L} />}
+          </div>
+        </div>
+        <style>{`@media (max-width:720px){ .dr-grid{ grid-template-columns: 1fr !important; } }`}</style>
+      </section>
+    );
+  }
+
+  try { DressCard = FixedDressCard; DressSection = FixedDressSection; } catch(e) {}
+  window.DressSection = FixedDressSection;
+}
 
 const ICEBREAKER_EVENT = {
   title_es: "Rompe hielo",
@@ -42,37 +93,21 @@ const ICEBREAKER_EVENT = {
 };
 
 (function patchIcebreakerData(){
-  if (window.DEFAULT_DATA) {
-    window.DEFAULT_DATA.icebreaker = window.DEFAULT_DATA.icebreaker || ICEBREAKER_EVENT;
-  }
-
+  if (window.DEFAULT_DATA) window.DEFAULT_DATA.icebreaker = window.DEFAULT_DATA.icebreaker || ICEBREAKER_EVENT;
   if (window.MockServer && !window.MockServer.__icebreakerPatched) {
     const originalGetContent = window.MockServer.getContent.bind(window.MockServer);
     const originalSaveContent = window.MockServer.saveContent.bind(window.MockServer);
-
     window.MockServer.getContent = async function(){
       const result = await originalGetContent();
       if (result && result.ok) {
         const saved = result.data || {};
-        result.data = {
-          ...window.DEFAULT_DATA,
-          ...saved,
-          icebreaker: saved.icebreaker || ICEBREAKER_EVENT,
-          _tweaks: saved._tweaks || window.DEFAULT_DATA._tweaks
-        };
+        result.data = { ...window.DEFAULT_DATA, ...saved, icebreaker: saved.icebreaker || ICEBREAKER_EVENT, _tweaks: saved._tweaks || window.DEFAULT_DATA._tweaks };
       }
       return result;
     };
-
     window.MockServer.saveContent = async function(data){
-      const next = {
-        ...window.DEFAULT_DATA,
-        ...(data || {}),
-        icebreaker: (data && data.icebreaker) || ICEBREAKER_EVENT
-      };
-      return originalSaveContent(next);
+      return originalSaveContent({ ...window.DEFAULT_DATA, ...(data || {}), icebreaker: (data && data.icebreaker) || ICEBREAKER_EVENT });
     };
-
     window.MockServer.__icebreakerPatched = true;
   }
 })();
@@ -84,11 +119,7 @@ if (typeof EventCard !== "undefined") {
       <section className="s" id="details">
         <WatercolorStamp size={400} style={{ position:"absolute", top:"10%", right:"-10%", opacity:.4, transform:"rotate(-15deg)" }} />
         <div className="inner" style={{ display:"flex", flexDirection:"column", gap:120 }}>
-          <SectionHead
-            kicker={L.program_kicker}
-            title={lang === "es" ? "Tres días para celebrar" : "Three days to celebrate"}
-            sub={lang === "es" ? "Comenzamos con un rompe hielo en una mezcalera antes de la ceremonia." : "We begin with an icebreaker at a mezcal distillery before the ceremony."}
-          />
+          <SectionHead kicker={L.program_kicker} title={lang === "es" ? "Tres días para celebrar" : "Three days to celebrate"} sub={lang === "es" ? "Comenzamos con un rompe hielo en una mezcalera antes de la ceremonia." : "We begin with an icebreaker at a mezcal distillery before the ceremony."} />
           <EventCard ev={current.icebreaker} side="left" lang={lang} L={L} />
           <EventCard ev={current.ceremony} side="right" lang={lang} L={L} />
           <EventCard ev={current.reception} side="left" lang={lang} L={L} />
@@ -151,11 +182,7 @@ function CloudGalleryAdmin({ data, onChange, lang, L }) {
     setMsg(lang === "es" ? "Subiendo imagen…" : "Uploading image…");
     try {
       const dataUrl = await resize(file);
-      const res = await fetch("/api/gallery/upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ filename: file.name, dataUrl }),
-      });
+      const res = await fetch("/api/gallery/upload", { method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify({ filename:file.name, dataUrl }) });
       const json = await res.json();
       if (!res.ok || !json.ok || !json.url) throw new Error(json.error || "Upload failed");
       await saveUpdate(i, { img: json.url }, lang === "es" ? "Imagen subida y guardada." : "Image uploaded and saved.");
@@ -191,37 +218,16 @@ function CloudGalleryAdmin({ data, onChange, lang, L }) {
 
   return (
     <React.Fragment>
-      <div className="micro" style={{ color:"var(--ink-mute)", lineHeight:1.6 }}>
-        {data.gallery.length} {lang === "es" ? "fotos · guardadas como URL pública" : "photos · saved as public URLs"}
-      </div>
+      <div className="micro" style={{ color:"var(--ink-mute)", lineHeight:1.6 }}>{data.gallery.length} {lang === "es" ? "fotos · guardadas como URL pública" : "photos · saved as public URLs"}</div>
       {msg && <div style={{ padding:10, border:"1px solid var(--line)", borderRadius:6, background:"#fff", color:"var(--sage-deep)", fontSize:12 }}>{msg}</div>}
       {data.gallery.map((g,i) => (
         <div key={i} style={{ padding:12, border:"1px solid var(--line)", borderRadius:6, background:"#fff", display:"grid", gridTemplateColumns:"96px 1fr", gap:12 }}>
-          <div style={{ width:96, height:96, overflow:"hidden", border:"1px solid var(--line)", display:"flex", alignItems:"center", justifyContent:"center", background:g.img ? "var(--paper-2)" : "var(--sage-wash)", color:"var(--ink-soft)", fontSize:9 }}>
-            {g.img ? <img src={g.img} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }} /> : (lang === "es" ? "Sin foto" : "No photo")}
-          </div>
+          <div style={{ width:96, height:96, overflow:"hidden", border:"1px solid var(--line)", display:"flex", alignItems:"center", justifyContent:"center", background:g.img ? "var(--paper-2)" : "var(--sage-wash)", color:"var(--ink-soft)", fontSize:9 }}>{g.img ? <img src={g.img} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }} /> : (lang === "es" ? "Sin foto" : "No photo")}</div>
           <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-            <div style={{ display:"flex", justifyContent:"space-between" }}>
-              <div className="micro" style={{ color:"var(--ink-mute)" }}>#{i+1}</div>
-              <div style={{ display:"flex", gap:4 }}>
-                <button onClick={()=>move(i,-1)} disabled={i===0}>↑</button>
-                <button onClick={()=>move(i,1)} disabled={i===data.gallery.length-1}>↓</button>
-                <button onClick={()=>{ if(confirm(lang === "es" ? "¿Eliminar esta foto?" : "Delete this photo?")) remove(i); }}>×</button>
-              </div>
-            </div>
-            <div className="row" style={{ gap:4 }}>
-              <label>{lang === "es" ? "Pie de foto" : "Caption"}</label>
-              <input value={g.ph || ""} onChange={e=>update(i, { ph:e.target.value })} onBlur={()=>MockServer.saveContent(data)} />
-            </div>
-            <div style={{ display:"flex", gap:6 }}>
-              <input ref={el => refs.current[i] = el} type="file" accept="image/*" style={{ display:"none" }} onChange={e=>upload(i, e.target.files?.[0])} />
-              <button type="button" disabled={busy === i} onClick={()=>refs.current[i]?.click()} style={{ flex:1 }}>{busy === i ? (lang === "es" ? "Subiendo…" : "Uploading…") : g.img ? (lang === "es" ? "Cambiar" : "Replace") : (lang === "es" ? "Subir" : "Upload")}</button>
-              {g.img && <button type="button" onClick={()=>saveUpdate(i, { img:"" })}>{lang === "es" ? "Quitar" : "Clear"}</button>}
-            </div>
-            <div className="row" style={{ gap:4 }}>
-              <label style={{ fontSize:9 }}>{lang === "es" ? "…o URL de imagen" : "…or image URL"}</label>
-              <input type="url" placeholder="https://…" value={g.img && g.img.startsWith("data:") ? "" : (g.img || "")} onChange={e=>update(i, { img:e.target.value })} onBlur={()=>MockServer.saveContent(data)} />
-            </div>
+            <div style={{ display:"flex", justifyContent:"space-between" }}><div className="micro" style={{ color:"var(--ink-mute)" }}>#{i+1}</div><div style={{ display:"flex", gap:4 }}><button onClick={()=>move(i,-1)} disabled={i===0}>↑</button><button onClick={()=>move(i,1)} disabled={i===data.gallery.length-1}>↓</button><button onClick={()=>{ if(confirm(lang === "es" ? "¿Eliminar esta foto?" : "Delete this photo?")) remove(i); }}>×</button></div></div>
+            <div className="row" style={{ gap:4 }}><label>{lang === "es" ? "Pie de foto" : "Caption"}</label><input value={g.ph || ""} onChange={e=>update(i, { ph:e.target.value })} onBlur={()=>MockServer.saveContent(data)} /></div>
+            <div style={{ display:"flex", gap:6 }}><input ref={el => refs.current[i] = el} type="file" accept="image/*" style={{ display:"none" }} onChange={e=>upload(i, e.target.files?.[0])} /><button type="button" disabled={busy === i} onClick={()=>refs.current[i]?.click()} style={{ flex:1 }}>{busy === i ? (lang === "es" ? "Subiendo…" : "Uploading…") : g.img ? (lang === "es" ? "Cambiar" : "Replace") : (lang === "es" ? "Subir" : "Upload")}</button>{g.img && <button type="button" onClick={()=>saveUpdate(i, { img:"" })}>{lang === "es" ? "Quitar" : "Clear"}</button>}</div>
+            <div className="row" style={{ gap:4 }}><label style={{ fontSize:9 }}>{lang === "es" ? "…o URL de imagen" : "…or image URL"}</label><input type="url" placeholder="https://…" value={g.img && g.img.startsWith("data:") ? "" : (g.img || "")} onChange={e=>update(i, { img:e.target.value })} onBlur={()=>MockServer.saveContent(data)} /></div>
           </div>
         </div>
       ))}
