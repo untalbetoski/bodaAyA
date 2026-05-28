@@ -1,5 +1,32 @@
 // gallery-cloud.jsx — Cloud upload override + icebreaker event patch
 
+(function normalizeDressSwatches(){
+  const style = document.createElement("style");
+  style.textContent = `
+    #dress .dr-grid div[style*="border-radius: 50%"],
+    #dress .dr-grid div[style*="border-radius:\"50%\""] {
+      width: 44px !important;
+      height: 44px !important;
+      max-width: 44px !important;
+      min-width: 44px !important;
+      aspect-ratio: 1 / 1 !important;
+      margin: 0 auto !important;
+      flex: 0 0 44px !important;
+    }
+    @media (max-width: 720px){
+      #dress .dr-grid div[style*="border-radius: 50%"],
+      #dress .dr-grid div[style*="border-radius:\"50%\""] {
+        width: 40px !important;
+        height: 40px !important;
+        max-width: 40px !important;
+        min-width: 40px !important;
+        flex-basis: 40px !important;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+})();
+
 const ICEBREAKER_EVENT = {
   title_es: "Rompe hielo",
   title_en: "Icebreaker",
