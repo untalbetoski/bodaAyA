@@ -238,3 +238,96 @@ function CloudGalleryAdmin({ data, onChange, lang, L }) {
 
 try { GalleryAdmin = CloudGalleryAdmin; } catch(e) {}
 window.GalleryAdmin = CloudGalleryAdmin;
+
+if (typeof AdminPanel !== "undefined" && !window.__icebreakerAdminWrapped) {
+  const BaseAdminPanel = AdminPanel;
+
+  function IcebreakerAdminEditor({ open, data, onChange, onSave, lang }) {
+    const [show, setShow] = React.useState(false);
+
+    React.useEffect(() => {
+      if (!open) { setShow(false); return; }
+      const id = setInterval(() => {
+        const active = document.querySelector(".admin-panel .tabs button.on");
+        const txt = (active?.textContent || "").toLowerCase();
+        setShow(txt.includes("eventos") || txt.includes("events"));
+      }, 200);
+      return () => clearInterval(id);
+    }, [open]);
+
+    if (!open || !show) return null;
+
+    const ice = data.icebreaker || ICEBREAKER_EVENT;
+    const updateIce = (key, value) => {
+      const next = JSON.parse(JSON.stringify(data));
+      next.icebreaker = { ...(next.icebreaker || ICEBREAKER_EVENT), [key]: value };
+      onChange(next);
+    };
+
+    const Field = ({ label, k, rows }) => (
+      <div className="row">
+        <label>{label}</label>
+        {rows ? (
+          <textarea rows={rows} value={ice[k] || ""} onChange={e => updateIce(k, e.target.value)} />
+        ) : (
+          <input value={ice[k] || ""} onChange={e => updateIce(k, e.target.value)} />
+        )}
+      </div>
+    );
+
+    return (
+      <div style={{
+        position:"fixed",
+        right:12,
+        bottom:74,
+        width:396,
+        maxWidth:"calc(100vw - 24px)",
+        maxHeight:"52vh",
+        overflowY:"auto",
+        zIndex:360,
+        padding:14,
+        border:"1px solid var(--line)",
+        borderRadius:10,
+        background:"rgba(255,253,248,.97)",
+        boxShadow:"0 18px 50px -24px rgba(0,0,0,.35)",
+        display:"flex",
+        flexDirection:"column",
+        gap:10,
+      }}>
+        <div className="micro" style={{ color:"var(--sage-deep)", marginBottom:2 }}>
+          {lang === "es" ? "Eventos · Rompe hielo" : "Events · Icebreaker"}
+        </div>
+        <div style={{ fontSize:12.5, color:"var(--ink-mute)", lineHeight:1.45 }}>
+          {lang === "es" ? "Edita aquí el evento que aparece antes de la ceremonia." : "Edit here the event shown before the ceremony."}
+        </div>
+        <Field label={lang === "es" ? "Título (ES)" : "Title (ES)"} k="title_es" />
+        <Field label={lang === "es" ? "Título (EN)" : "Title (EN)"} k="title_en" />
+        <Field label={lang === "es" ? "Lugar" : "Venue"} k="venue" />
+        <Field label={lang === "es" ? "Dirección (ES)" : "Address (ES)"} k="address_es" />
+        <Field label={lang === "es" ? "Dirección (EN)" : "Address (EN)"} k="address_en" />
+        <Field label={lang === "es" ? "Fecha (ES)" : "Date (ES)"} k="date_es" />
+        <Field label={lang === "es" ? "Fecha (EN)" : "Date (EN)"} k="date_en" />
+        <Field label={lang === "es" ? "Fecha ISO" : "ISO Date"} k="iso" />
+        <Field label={lang === "es" ? "Mapa embed" : "Map embed"} k="map" />
+        <Field label={lang === "es" ? "Nota (ES)" : "Note (ES)"} k="note_es" rows={2} />
+        <Field label={lang === "es" ? "Nota (EN)" : "Note (EN)"} k="note_en" rows={2} />
+        <button className="btn btn-filled" type="button" onClick={onSave} style={{ marginTop:4 }}>
+          {lang === "es" ? "Guardar rompe hielo" : "Save icebreaker"}
+        </button>
+      </div>
+    );
+  }
+
+  function AdminPanelWithIcebreaker(props) {
+    return (
+      <React.Fragment>
+        <BaseAdminPanel {...props} />
+        <IcebreakerAdminEditor {...props} />
+      </React.Fragment>
+    );
+  }
+
+  try { AdminPanel = AdminPanelWithIcebreaker; } catch(e) {}
+  window.AdminPanel = AdminPanelWithIcebreaker;
+  window.__icebreakerAdminWrapped = true;
+}
