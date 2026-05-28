@@ -64,25 +64,12 @@
     color:var(--ink-soft);
     font-weight:500;
   }
-  .rule{
-    display:inline-flex; align-items:center; gap:14px;
-    color:var(--ink-mute);
-  }
-  .rule::before, .rule::after{
-    content:""; display:block; width:48px; height:1px;
-    background:currentColor;
-  }
+  .rule{ display:inline-flex; align-items:center; gap:14px; color:var(--ink-mute); }
+  .rule::before, .rule::after{ content:""; display:block; width:48px; height:1px; background:currentColor; }
   .script{ font-family:var(--script); font-weight:400; }
   .display{ font-family:var(--display); font-weight:400; letter-spacing:.02em; }
 
-  .blob{
-    position:absolute;
-    pointer-events:none;
-    border-radius:50%;
-    filter:blur(40px);
-    opacity:.55;
-    mix-blend-mode:multiply;
-  }
+  .blob{ position:absolute; pointer-events:none; border-radius:50%; filter:blur(40px); opacity:.55; mix-blend-mode:multiply; }
   .blob.b1{ background:radial-gradient(circle at 30% 30%, var(--sage-light), transparent 60%); }
   .blob.b2{ background:radial-gradient(circle at 60% 40%, var(--sage), transparent 65%); }
   .blob.b3{ background:radial-gradient(circle at 50% 50%, var(--sage-wash), transparent 70%); }
@@ -110,50 +97,26 @@
   .btn.btn-filled:hover{ background:var(--ink); border-color:var(--ink); }
 
   .field{ display:flex; flex-direction:column; gap:6px; }
-  .field label{
-    font-family:var(--sans); font-size:10.5px; letter-spacing:.22em; text-transform:uppercase; color:var(--ink-soft);
-  }
+  .field label{ font-family:var(--sans); font-size:10.5px; letter-spacing:.22em; text-transform:uppercase; color:var(--ink-soft); }
   .field input, .field select, .field textarea{
     appearance:none; border:0; border-bottom:1px solid var(--line);
-    background:transparent; padding:8px 2px; font-family:var(--serif); font-size:18px; color:var(--ink);
-    outline:none;
+    background:transparent; padding:8px 2px; font-family:var(--serif); font-size:18px; color:var(--ink); outline:none;
   }
   .field input:focus, .field select:focus, .field textarea:focus{ border-color:var(--sage-deep); }
 
-  .top-nav{
-    position:fixed; top:0; left:0; right:0; z-index:50;
-    display:flex; align-items:center; justify-content:space-between;
-    padding:18px 28px;
-    background:linear-gradient(to bottom, rgba(250,246,238,.85), rgba(250,246,238,0));
-    backdrop-filter: blur(4px);
-  }
+  .top-nav{ position:fixed; top:0; left:0; right:0; z-index:50; display:flex; align-items:center; justify-content:space-between; padding:18px 28px; background:linear-gradient(to bottom, rgba(250,246,238,.85), rgba(250,246,238,0)); backdrop-filter: blur(4px); }
   .top-nav .brand{ font-family:var(--display); font-size:15px; letter-spacing:.24em; text-transform:uppercase; }
   .top-nav .links{ display:flex; gap:22px; }
-  .top-nav .links button{
-    background:transparent; border:0; cursor:pointer;
-    font-family:var(--sans); font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:var(--ink-soft);
-  }
+  .top-nav .links button{ background:transparent; border:0; cursor:pointer; font-family:var(--sans); font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:var(--ink-soft); }
   .top-nav .links button:hover{ color:var(--ink); }
   .lang-toggle{ display:inline-flex; gap:2px; align-items:center; border:1px solid var(--line); border-radius:999px; padding:3px; background:rgba(255,255,255,.5); }
-  .lang-toggle button{
-    appearance:none; border:0; background:transparent; cursor:pointer;
-    font-family:var(--sans); font-size:10px; letter-spacing:.2em; text-transform:uppercase;
-    padding:5px 10px; border-radius:999px; color:var(--ink-soft);
-  }
+  .lang-toggle button{ appearance:none; border:0; background:transparent; cursor:pointer; font-family:var(--sans); font-size:10px; letter-spacing:.2em; text-transform:uppercase; padding:5px 10px; border-radius:999px; color:var(--ink-soft); }
   .lang-toggle button.on{ background:var(--ink); color:var(--paper); }
 
   section.s{ position:relative; padding:120px 24px; overflow:hidden; }
   section.s .inner{ max-width:980px; margin:0 auto; position:relative; z-index:2; }
 
-  .admin-fab{
-    position:fixed; left:18px; bottom:18px; z-index:40;
-    height:42px; padding:0 18px; border-radius:999px;
-    background:rgba(63,52,32,.92); backdrop-filter:blur(12px);
-    border:1px solid rgba(255,255,255,.15); cursor:pointer;
-    display:inline-flex; align-items:center; gap:8px; color:var(--paper);
-    font-family:var(--sans); font-size:11px; letter-spacing:.22em; text-transform:uppercase; font-weight:500;
-    box-shadow:0 8px 24px -8px rgba(0,0,0,.25); transition: transform .2s ease, background .2s ease;
-  }
+  .admin-fab{ position:fixed; left:18px; bottom:18px; z-index:40; height:42px; padding:0 18px; border-radius:999px; background:rgba(63,52,32,.92); backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,.15); cursor:pointer; display:inline-flex; align-items:center; gap:8px; color:var(--paper); font-family:var(--sans); font-size:11px; letter-spacing:.22em; text-transform:uppercase; font-weight:500; box-shadow:0 8px 24px -8px rgba(0,0,0,.25); transition: transform .2s ease, background .2s ease; }
   .admin-fab:hover{ transform:translateY(-2px); background:var(--ink); }
   .admin-fab svg{ flex-shrink:0; }
 
@@ -220,6 +183,7 @@
 <script type="text/babel" src="admin.jsx"></script>
 <script type="text/babel" src="gallery-cloud.jsx"></script>
 <script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="spotify-playlist.jsx"></script>
 <script type="text/babel" src="app.jsx"></script>
 
 </body>
