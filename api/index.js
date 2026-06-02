@@ -93,21 +93,6 @@ app.get('/api/content/status', async (req, res) => {
   }
 });
 
-app.get('/api/content/probe', async (req, res) => {
-  const probePath = `site/.probe-${Date.now()}.json`;
-  try {
-    if (!cloudReady()) throw new Error('Cloud storage is not configured');
-    const payload = Buffer.from(JSON.stringify({ ok:true, at:new Date().toISOString() }), 'utf8');
-    const upload = await cloud.storage.from(GALLERY_BUCKET).upload(probePath, payload, { contentType:'application/json', upsert:false });
-    if (upload.error) throw upload.error;
-    const remove = await cloud.storage.from(GALLERY_BUCKET).remove([probePath]);
-    if (remove.error) throw remove.error;
-    return res.json({ ok:true, writable:true, bucket:GALLERY_BUCKET });
-  } catch(e) {
-    return res.status(503).json({ ok:false, writable:false, bucket:GALLERY_BUCKET, error:e.message });
-  }
-});
-
 app.post('/api/gallery/upload', async (req, res) => {
   try {
     if (!cloudReady()) return res.status(500).json({ ok:false, error:'Cloud storage is not configured' });
