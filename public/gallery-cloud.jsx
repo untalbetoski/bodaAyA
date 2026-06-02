@@ -22,7 +22,7 @@ const FIXED_DRESS_SWATCHES_DAY2 = [
     #dress .dress-swatch-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;align-items:start;}
     #dress .dress-swatch-item{min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;}
     #dress .dress-color-dot{width:44px!important;height:44px!important;min-width:44px!important;max-width:44px!important;flex:0 0 44px!important;border-radius:50%!important;aspect-ratio:1/1!important;margin:0 auto!important;display:block!important;}
-    #dress .dress-swatch-label{width:100%;text-align:center;white-space:normal;overflow-wrap:anywhere;line-height:1.12;}
+    #dress .dress-swatch-label{width:100%;text-align:center;white-space:normal;overflow-wrap:anywhere;line-height:1.15;}
     @media(max-width:720px){#dress .dress-color-dot{width:40px!important;height:40px!important;min-width:40px!important;max-width:40px!important;flex-basis:40px!important;}}
   `;
   document.head.appendChild(style);
