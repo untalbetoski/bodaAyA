@@ -70,6 +70,19 @@
   }
 })();
 
+(function loadHeroMonogram(){
+  try {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', 'monogram-site.js', false);
+    xhr.send(null);
+    if (xhr.status >= 200 && xhr.status < 300) {
+      (0, eval)(xhr.responseText);
+    }
+  } catch (e) {
+    console.error('[Monogram] loader failed:', e);
+  }
+})();
+
 const SPOTIFY_PLAYLIST_URL = "https://open.spotify.com/playlist/2yuFG9u83IBvIlOmMyiBj7?si=RXLU1cmqTAC61rMMHD58Cg&pt=ab3cf25b4dfbfd4c75055e8ceaa97445&pi=iBlavtqCS1G2-";
 const SPOTIFY_EMBED_URL = "https://open.spotify.com/embed/playlist/2yuFG9u83IBvIlOmMyiBj7?utm_source=generator&theme=0";
 
