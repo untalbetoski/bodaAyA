@@ -51,9 +51,9 @@ async function saveRemoteContent(data) {
   if (!cloudReady()) throw new Error('Cloud storage is not configured');
   const body = Buffer.from(JSON.stringify(data, null, 2), 'utf8');
   const { error } = await cloud.storage.from(GALLERY_BUCKET).upload(CONTENT_OBJECT, body, {
-    contentType: 'application/json; charset=utf-8',
-    upsert: true,
-    cacheControl: '0'
+    contentType:'application/json; charset=utf-8',
+    upsert:true,
+    cacheControl:'0'
   });
   if (error) throw error;
   return true;
@@ -90,6 +90,21 @@ app.get('/api/content/status', async (req, res) => {
     return res.json({ ok:true, cloud:cloudReady(), bucket:GALLERY_BUCKET, object:CONTENT_OBJECT, hasRemoteContent:Boolean(remote) });
   } catch(e) {
     return res.status(503).json({ ok:false, cloud:cloudReady(), bucket:GALLERY_BUCKET, object:CONTENT_OBJECT, error:e.message });
+  }
+});
+
+app.get('/api/content/probe', async (req, res) => {
+  const probePath = `site/.probe-${Date.now()}.json`;
+  try {
+    if (!cloudReady()) throw new Error('Cloud storage is not configured');
+    const payload = Buffer.from(JSON.stringify({ ok:true, at:new Date().toISOString() }), 'utf8');
+    const upload = await cloud.storage.from(GALLERY_BUCKET).upload(probePath, payload, { contentType:'application/json', upsert:false });
+    if (upload.error) throw upload.error;
+    const remove = await cloud.storage.from(GALLERY_BUCKET).remove([probePath]);
+    if (remove.error) throw remove.error;
+    return res.json({ ok:true, writable:true, bucket:GALLERY_BUCKET });
+  } catch(e) {
+    return res.status(503).json({ ok:false, writable:false, bucket:GALLERY_BUCKET, error:e.message });
   }
 });
 
