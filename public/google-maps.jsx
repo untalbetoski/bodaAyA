@@ -208,3 +208,13 @@
   setTimeout(mergeIntoAppPalettes, 500);
   window.__WATERCOLOR_PALETTES__ = EXTRA_PALETTES;
 })();
+
+// Keep the dress-code palette labels compact so they do not compete with the color swatches.
+(function reduceDressCodePaletteLabelSize(){
+  const style = document.createElement("style");
+  style.textContent = `
+    #dress .dress-swatch-label{font-size:7px!important;letter-spacing:.18em!important;line-height:1.08!important;}
+    @media(max-width:720px){#dress .dress-swatch-label{font-size:6.5px!important;letter-spacing:.14em!important;}}
+  `;
+  document.head.appendChild(style);
+})();
