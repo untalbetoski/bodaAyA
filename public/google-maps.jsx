@@ -48,9 +48,7 @@
   window.__GOOGLE_MAPS_EVENTS__ = GOOGLE_MAPS;
 })();
 
-// Extend the design panel with additional watercolor palettes without changing
-// the main application file. This script loads before app.jsx, so the wrapper
-// injects the extra palette definitions when App initializes.
+// Extend both design controls with additional watercolor palettes.
 (function extendWatercolorPalettes(){
   const EXTRA_PALETTES = {
     terracotta: {
@@ -87,7 +85,27 @@
     }
   };
 
+  const EXTRA_ENTRIES = [
+    { key:"terracotta", name_es:"Terracota",    name_en:"Terracotta" },
+    { key:"lavender",   name_es:"Lavanda",      name_en:"Lavender" },
+    { key:"eucalyptus", name_es:"Eucalipto",    name_en:"Eucalyptus" },
+    { key:"blueMist",   name_es:"Azul niebla",  name_en:"Blue mist" },
+    { key:"peach",      name_es:"Durazno",      name_en:"Peach" },
+    { key:"olive",      name_es:"Oliva",        name_en:"Olive" },
+    { key:"mauve",      name_es:"Malva",        name_en:"Mauve" },
+    { key:"sand",       name_es:"Arena",        name_en:"Sand" },
+  ];
+
   const paletteOptions = Object.values(EXTRA_PALETTES).map((p) => [p.paper, p.deep, p.light]);
+
+  function mergeIntoAppPalettes(){
+    try {
+      Object.assign(PALETTES, EXTRA_PALETTES);
+      return true;
+    } catch(e) {
+      return false;
+    }
+  }
 
   try {
     const style = document.createElement("style");
@@ -101,7 +119,7 @@
   try {
     const originalUseTweaks = useTweaks;
     useTweaks = function extendedUseTweaks(defaults){
-      try { Object.assign(PALETTES, EXTRA_PALETTES); } catch(e) {}
+      mergeIntoAppPalettes();
       return originalUseTweaks(defaults);
     };
   } catch(e) {
@@ -122,5 +140,71 @@
     console.error("[WatercolorPalettes] color control extension failed:", e);
   }
 
+  // The visible administration panel has its own palette grid. Extend that
+  // component as well so the new options appear under Administration → Diseño.
+  try {
+    const OriginalDesignAdmin = DesignAdmin;
+    DesignAdmin = function ExtendedDesignAdmin(props){
+      const { tweaks, setTweak, palettes, lang } = props;
+      const allPalettes = { ...(palettes || {}), ...EXTRA_PALETTES };
+      const [paper, deep] = tweaks?.palette || [];
+      const selectedKey = EXTRA_ENTRIES.find((e) => {
+        const p = allPalettes[e.key];
+        return p.paper === paper && p.deep === deep;
+      })?.key;
+
+      const pickExtraPalette = (key) => {
+        mergeIntoAppPalettes();
+        const p = allPalettes[key];
+        try { if (typeof applyPalette === "function") applyPalette(p); } catch(e) {}
+        setTweak("palette", [p.paper, p.deep, p.light]);
+      };
+
+      return (
+        <React.Fragment>
+          <div className="micro" style={{ color:"var(--sage-deep)", marginTop:4 }}>
+            {lang === "es" ? "Paletas adicionales" : "Additional palettes"}
+          </div>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+            {EXTRA_ENTRIES.map((entry) => {
+              const p = allPalettes[entry.key];
+              const on = entry.key === selectedKey;
+              return (
+                <button key={entry.key} type="button"
+                  onClick={() => pickExtraPalette(entry.key)}
+                  style={{
+                    appearance:"none", cursor:"pointer", padding:14, textAlign:"left",
+                    border:`1px solid ${on ? "var(--sage-deep)" : "var(--line)"}`,
+                    background:on ? "rgba(168,184,160,.18)" : "#fff",
+                    borderRadius:6, display:"flex", flexDirection:"column", gap:10,
+                  }}>
+                  <div style={{ display:"flex", gap:6, height:36 }}>
+                    <div style={{ flex:2, background:p.paper, borderRadius:3, border:"1px solid rgba(0,0,0,.08)" }}></div>
+                    <div style={{ flex:1, background:p.deep, borderRadius:3 }}></div>
+                    <div style={{ flex:1, background:p.main, borderRadius:3 }}></div>
+                    <div style={{ flex:1, background:p.light, borderRadius:3 }}></div>
+                  </div>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline" }}>
+                    <span style={{ fontFamily:"var(--serif)", fontSize:14, color:"var(--ink)", fontStyle:"italic" }}>
+                      {lang === "es" ? entry.name_es : entry.name_en}
+                    </span>
+                    {on && <span className="micro" style={{ color:"var(--sage-deep)", fontSize:9 }}>● {lang === "es" ? "Activa" : "Active"}</span>}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          <OriginalDesignAdmin {...props} palettes={allPalettes} />
+        </React.Fragment>
+      );
+    };
+    window.DesignAdmin = DesignAdmin;
+  } catch(e) {
+    console.error("[WatercolorPalettes] admin design extension failed:", e);
+  }
+
+  Promise.resolve().then(mergeIntoAppPalettes);
+  setTimeout(mergeIntoAppPalettes, 0);
+  setTimeout(mergeIntoAppPalettes, 500);
   window.__WATERCOLOR_PALETTES__ = EXTRA_PALETTES;
 })();
