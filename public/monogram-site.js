@@ -1,56 +1,22 @@
-// monogram-site.js — subtle Andrea & Alberto monogram under hero names
-(function addSubtleHeroMonogram(){
+// monogram-site.js — subtle bottom-right monogram signature
+(function(){
   if (window.__AA_MONOGRAM_ACTIVE__) return;
   window.__AA_MONOGRAM_ACTIVE__ = true;
 
   const style = document.createElement('style');
-  style.textContent = `
-    .aa-hero-monogram{
-      display:block;
-      width:min(168px,34vw);
-      height:auto;
-      margin:20px auto 0;
-      opacity:.075;
-      pointer-events:none;
-      user-select:none;
-      filter:grayscale(1);
-      mix-blend-mode:multiply;
-      transition:opacity .35s ease;
-    }
-    body[data-mode="editorial"] .aa-hero-monogram{
-      margin-left:0;
-      margin-right:0;
-      width:min(150px,30vw);
-      opacity:.065;
-    }
-    @media(max-width:720px){
-      .aa-hero-monogram{
-        width:min(142px,40vw);
-        margin-top:16px;
-        opacity:.07;
-      }
-    }
-  `;
+  style.textContent = '.aa-corner-monogram{position:fixed;right:16px;bottom:14px;width:58px;height:auto;opacity:.10;pointer-events:none;user-select:none;filter:grayscale(1);mix-blend-mode:multiply;z-index:24}@media(max-width:720px){.aa-corner-monogram{right:10px;bottom:10px;width:48px;opacity:.09}}';
   document.head.appendChild(style);
 
   function mount(){
-    const heroTitle = document.querySelector('#home .hero-title');
-    if (!heroTitle || document.querySelector('.aa-hero-monogram')) return false;
-
+    if (!document.body || document.querySelector('.aa-corner-monogram')) return;
     const img = document.createElement('img');
-    img.src = 'monograma-aa.svg';
+    img.src = '/monograma-aa.svg';
     img.alt = '';
     img.setAttribute('aria-hidden','true');
-    img.className = 'aa-hero-monogram';
-    heroTitle.insertAdjacentElement('afterend', img);
-    return true;
+    img.className = 'aa-corner-monogram';
+    document.body.appendChild(img);
   }
 
-  if (!mount()) {
-    const observer = new MutationObserver(() => {
-      if (mount()) observer.disconnect();
-    });
-    observer.observe(document.documentElement, { childList:true, subtree:true });
-    window.setTimeout(() => observer.disconnect(), 12000);
-  }
+  if (document.body) mount();
+  else document.addEventListener('DOMContentLoaded', mount, { once:true });
 })();
