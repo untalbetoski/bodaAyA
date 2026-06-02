@@ -60,7 +60,10 @@
     xhr.open('GET', 'google-maps.jsx', false);
     xhr.send(null);
     if (xhr.status >= 200 && xhr.status < 300) {
-      (0, eval)(xhr.responseText);
+      const compiled = window.Babel
+        ? Babel.transform(xhr.responseText, { presets:['react'] }).code
+        : xhr.responseText;
+      (0, eval)(compiled);
     }
   } catch (e) {
     console.error('[GoogleMaps] loader failed:', e);
