@@ -7,12 +7,15 @@
     traditional: "https://www.google.com/maps?q=Oaxaca+de+Ju%C3%A1rez,+Oaxaca&output=embed",
   };
 
+  const BRIDE_PARENTS = "Virginia Curioca Nahon · Abel Hernández Castillo †";
+
   function normalize(content){
     const next = { ...(content || {}) };
     if (next.icebreaker) next.icebreaker = { ...next.icebreaker, map:GOOGLE_MAPS.icebreaker };
     if (next.ceremony) next.ceremony = { ...next.ceremony, map:GOOGLE_MAPS.ceremony };
     if (next.reception) next.reception = { ...next.reception, map:GOOGLE_MAPS.reception };
     if (next.traditional) next.traditional = { ...next.traditional, map:GOOGLE_MAPS.traditional };
+    if (next.parents) next.parents = { ...next.parents, bride_es:BRIDE_PARENTS, bride_en:BRIDE_PARENTS };
     return next;
   }
 
@@ -22,6 +25,7 @@
     try { DEFAULT_DATA.ceremony = window.DEFAULT_DATA.ceremony; } catch(e) {}
     try { DEFAULT_DATA.reception = window.DEFAULT_DATA.reception; } catch(e) {}
     try { DEFAULT_DATA.traditional = window.DEFAULT_DATA.traditional; } catch(e) {}
+    try { DEFAULT_DATA.parents = window.DEFAULT_DATA.parents; } catch(e) {}
   }
 
   if (window.ICEBREAKER_EVENT) {
