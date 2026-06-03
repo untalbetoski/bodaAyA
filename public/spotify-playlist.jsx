@@ -70,6 +70,19 @@
   }
 })();
 
+(function loadNahonAccentPatch(){
+  try {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', 'nahon-patch.js', false);
+    xhr.send(null);
+    if (xhr.status >= 200 && xhr.status < 300) {
+      (0, eval)(xhr.responseText);
+    }
+  } catch (e) {
+    console.error('[Nahón] loader failed:', e);
+  }
+})();
+
 (function loadHeroMonogram(){
   try {
     const xhr = new XMLHttpRequest();
