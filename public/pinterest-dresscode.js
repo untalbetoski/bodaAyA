@@ -1,9 +1,9 @@
-// pinterest-dresscode.js — add subtle Pinterest inspiration links to first-day dress code
+// pinterest-dresscode.js — add subtle Pinterest inspiration links to both dress-code days
 (function addPinterestDressCodeBoards(){
   if (window.__AA_PINTEREST_DRESSCODE__) return;
   window.__AA_PINTEREST_DRESSCODE__ = true;
 
-  const BOARDS = [
+  const DAY_ONE_BOARDS = [
     {
       title:'Inspiración para hombres',
       note:'Ideas de atuendo para el primer día',
@@ -13,6 +13,14 @@
       title:'Inspiración para damas',
       note:'Ideas de vestido para el primer día',
       url:'https://pin.it/2GLDr4kiR'
+    }
+  ];
+
+  const DAY_TWO_BOARDS = [
+    {
+      title:'Inspiración para damas y hombres',
+      note:'Ideas de atuendo para el segundo día',
+      url:'https://pin.it/2dsj7xAZM'
     }
   ];
 
@@ -78,13 +86,10 @@
   `;
   document.head.appendChild(style);
 
-  function mount(){
-    const firstCard = document.querySelector('#dress .dr-grid > :first-child > div');
-    if (!firstCard || firstCard.querySelector('.aa-pinterest-group')) return false;
-
+  function createGroup(boards, day){
     const group = document.createElement('div');
-    group.className = 'aa-pinterest-group';
-    group.innerHTML = BOARDS.map((board) => `
+    group.className = `aa-pinterest-group aa-pinterest-day-${day}`;
+    group.innerHTML = boards.map((board) => `
       <div class="aa-pinterest-card">
         <div class="aa-pinterest-copy">
           <div class="aa-pinterest-title">${board.title}</div>
@@ -93,15 +98,33 @@
         <a class="aa-pinterest-link" href="${board.url}" target="_blank" rel="noopener noreferrer">Ver Pinterest</a>
       </div>
     `).join('');
+    return group;
+  }
 
-    const avoidBox = firstCard.querySelector('div[style*="border: 1px dashed"], div[style*="border:1px dashed"]');
+  function mountIntoCard(card, boards, day){
+    if (!card) return false;
+    if (card.querySelector(`.aa-pinterest-day-${day}`)) return true;
+
+    const group = createGroup(boards, day);
+    const avoidBox = card.querySelector('div[style*="border: 1px dashed"], div[style*="border:1px dashed"]');
     if (avoidBox) avoidBox.insertAdjacentElement('beforebegin', group);
-    else firstCard.appendChild(group);
+    else card.appendChild(group);
     return true;
   }
 
+  function mount(){
+    const firstCard = document.querySelector('#dress .dr-grid > :first-child > div');
+    const secondCard = document.querySelector('#dress .dr-grid > :nth-child(2) > div');
+
+    const firstReady = mountIntoCard(firstCard, DAY_ONE_BOARDS, 'one');
+    const secondReady = mountIntoCard(secondCard, DAY_TWO_BOARDS, 'two');
+    return firstReady && secondReady;
+  }
+
   if (!mount()) {
-    const observer = new MutationObserver(() => mount());
+    const observer = new MutationObserver(() => {
+      if (mount()) observer.disconnect();
+    });
     observer.observe(document.documentElement, { childList:true, subtree:true });
     window.setTimeout(() => observer.disconnect(), 15000);
   }
