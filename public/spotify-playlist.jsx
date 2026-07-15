@@ -41,6 +41,16 @@
   window.MockServer.__cloudPersistenceGuarded = true;
 })();
 
+(function loadCssOnce(href){
+  try {
+    if (document.querySelector('link[href="' + href + '"]')) return;
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = href;
+    document.head.appendChild(link);
+  } catch(e) {}
+})('minimal-editorial-theme.css');
+
 (function loadCloudBootstrap(){
   try {
     const xhr = new XMLHttpRequest();
