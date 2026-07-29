@@ -17,7 +17,7 @@
   style.id = 'aa-script-font-force-style';
   style.textContent = `
     :root{
-      --display-font:'Beautifully Delicious Script','Beautifully Delicious','Great Vibes','Snell Roundhand','Segoe Script',cursive!important;
+      --display-font:'Eyesome Script','Eyesome','Great Vibes','Snell Roundhand','Segoe Script',cursive!important;
       --button-font:'Glacial Indifference','GlacialIndifference','Montserrat','Avenir Next','Century Gothic','Helvetica Neue',Arial,sans-serif!important;
     }
     h1,h2,h3,.hero-title,.section-title,.micro,.kicker,.eyebrow,
@@ -64,7 +64,7 @@
   function applyInline(){
     var scriptSelector = 'h1,h2,h3,.hero-title,.section-title,.micro,.kicker,.eyebrow';
     document.querySelectorAll(scriptSelector).forEach(function(el){
-      el.style.setProperty('font-family', "'Beautifully Delicious Script','Beautifully Delicious','Great Vibes','Snell Roundhand','Segoe Script',cursive", 'important');
+      el.style.setProperty('font-family', "'Eyesome Script','Eyesome','Great Vibes','Snell Roundhand','Segoe Script',cursive", 'important');
       el.style.setProperty('text-transform', 'none', 'important');
       el.style.setProperty('letter-spacing', '.01em', 'important');
       el.style.setProperty('font-weight', '400', 'important');
