@@ -169,7 +169,7 @@
           <aside class="aa-welcome-aside">
             <div class="aa-small-label">Andrea &amp; Alberto</div>
             <div class="aa-side-script">Oaxaca nos espera</div>
-            <div class="aa-date-line">16 de abril de 2027<br/>Oaxaca, México</div>
+            <div class="aa-date-line">15, 16 y 17 de abril 2027<br/>Oaxaca, México</div>
           </aside>
           <article>
             <div class="aa-welcome-copy">
