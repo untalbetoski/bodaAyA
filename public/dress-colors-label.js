@@ -29,6 +29,7 @@
     var grids = document.querySelectorAll('#dress .dress-swatch-grid');
     grids.forEach(function(grid){
       if (grid.previousElementSibling && grid.previousElementSibling.classList && grid.previousElementSibling.classList.contains('aa-colores-sugeridos')) return;
+      if (grid.previousElementSibling && grid.previousElementSibling.classList && grid.previousElementSibling.classList.contains('aa-dress-colors-label')) return;
       var label = document.createElement('div');
       label.className = 'aa-colores-sugeridos';
       label.textContent = 'Colores sugeridos';
@@ -41,4 +42,27 @@
   observer.observe(document.documentElement, { childList:true, subtree:true });
   setTimeout(mount, 600);
   setTimeout(mount, 1600);
+})();
+
+// Load the safe admin editor after the site has had time to render.
+// This keeps the public platform visible even if the editor fails.
+(function loadSafeAdminEditor(){
+  try {
+    if (window.__AA_SAFE_ADMIN_EDITOR_LOADER__) return;
+    window.__AA_SAFE_ADMIN_EDITOR_LOADER__ = true;
+    function load(){
+      try {
+        if (document.querySelector('script[src="admin-safe-panel.js"]')) return;
+        var script = document.createElement('script');
+        script.src = 'admin-safe-panel.js?v=1';
+        script.async = true;
+        script.onerror = function(){ console.error('[AdminSafePanel] file could not be loaded'); };
+        document.body.appendChild(script);
+      } catch(e) {
+        console.error('[AdminSafePanel] loader failed:', e);
+      }
+    }
+    if (document.readyState === 'complete') setTimeout(load, 900);
+    else window.addEventListener('load', function(){ setTimeout(load, 900); });
+  } catch(e) {}
 })();
