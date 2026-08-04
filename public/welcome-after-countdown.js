@@ -9,7 +9,9 @@
     #aa-welcome-message{
       position:relative!important;
       overflow:hidden!important;
-      background:var(--paper,#fff)!important;
+      background:transparent!important;
+      background-color:transparent!important;
+      background-image:none!important;
       color:var(--ink,#050505)!important;
       padding-top:96px!important;
       padding-bottom:112px!important;
@@ -19,11 +21,13 @@
       max-width:1120px!important;
       margin:0 auto!important;
       width:min(1120px, calc(100% - 48px))!important;
+      background:transparent!important;
     }
     #aa-welcome-message .aa-section-head{
       text-align:center!important;
       margin:0 auto 62px!important;
       max-width:760px!important;
+      background:transparent!important;
     }
     #aa-welcome-message .aa-section-head .micro.rule{
       display:inline-flex!important;
@@ -71,12 +75,15 @@
       border-bottom:1px solid var(--line,#111)!important;
       padding:58px 0!important;
       background:transparent!important;
+      background-color:transparent!important;
+      background-image:none!important;
     }
     #aa-welcome-message .aa-welcome-aside{
       position:sticky!important;
       top:96px!important;
       padding-right:28px!important;
       border-right:1px solid rgba(0,0,0,.18)!important;
+      background:transparent!important;
     }
     #aa-welcome-message .aa-welcome-aside .aa-small-label{
       font-family:'Glacial Indifference','GlacialIndifference','Montserrat','Avenir Next','Century Gothic','Helvetica Neue',Arial,sans-serif!important;
@@ -108,6 +115,7 @@
       font-weight:300!important;
       letter-spacing:.01em!important;
       color:var(--ink-soft,#111)!important;
+      background:transparent!important;
     }
     #aa-welcome-message .aa-welcome-copy p{
       margin:0 0 23px!important;
@@ -127,6 +135,7 @@
       gap:24px!important;
       padding-top:28px!important;
       border-top:1px solid rgba(0,0,0,.18)!important;
+      background:transparent!important;
     }
     #aa-welcome-message .aa-welcome-signature .aa-with-love{
       font-family:'Glacial Indifference','GlacialIndifference','Montserrat','Avenir Next','Century Gothic','Helvetica Neue',Arial,sans-serif!important;
