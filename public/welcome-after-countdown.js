@@ -29,22 +29,6 @@
       max-width:760px!important;
       background:transparent!important;
     }
-    #aa-welcome-message .aa-section-head .micro.rule{
-      display:inline-flex!important;
-      align-items:center!important;
-      justify-content:center!important;
-      gap:16px!important;
-      margin-bottom:22px!important;
-      color:var(--ink,#050505)!important;
-    }
-    #aa-welcome-message .aa-section-head .micro.rule:before,
-    #aa-welcome-message .aa-section-head .micro.rule:after{
-      content:''!important;
-      display:block!important;
-      width:52px!important;
-      height:1px!important;
-      background:var(--line,#111)!important;
-    }
     #aa-welcome-message .aa-welcome-title{
       font-family:'Eyesome Script','Eyesome','Great Vibes','Snell Roundhand','Segoe Script',cursive!important;
       font-size:clamp(58px,9vw,108px)!important;
@@ -178,7 +162,6 @@
     section.innerHTML = `
       <div class="inner">
         <div class="aa-section-head reveal in">
-          <div class="micro rule">Mensaje de bienvenida</div>
           <h2 class="aa-welcome-title display">Bienvenidos</h2>
           <p class="aa-section-sub">Gracias por formar parte de nuestra historia y de este nuevo comienzo.</p>
         </div>
