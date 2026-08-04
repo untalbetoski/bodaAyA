@@ -119,6 +119,19 @@
   }
 })();
 
+(function loadDressColorsLabel(){
+  try {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', 'dress-colors-label.js', false);
+    xhr.send(null);
+    if (xhr.status >= 200 && xhr.status < 300) {
+      (0, eval)(xhr.responseText);
+    }
+  } catch (e) {
+    console.error('[DressColorsLabel] loader failed:', e);
+  }
+})();
+
 (function loadMinimalTheme(){
   try {
     const xhr = new XMLHttpRequest();
