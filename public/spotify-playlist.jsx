@@ -184,6 +184,18 @@
   }
 })();
 
+(function loadCitrusInspirationTheme(){
+  try {
+    if (document.querySelector('link[href="citrus-inspiration-theme.css"]')) return;
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'citrus-inspiration-theme.css';
+    document.head.appendChild(link);
+  } catch (e) {
+    console.error('[CitrusTheme] loader failed:', e);
+  }
+})();
+
 const SPOTIFY_PLAYLIST_URL = "https://open.spotify.com/playlist/2yuFG9u83IBvIlOmMyiBj7?si=RXLU1cmqTAC61rMMHD58Cg&pt=ab3cf25b4dfbfd4c75055e8ceaa97445&pi=iBlavtqCS1G2-";
 const SPOTIFY_EMBED_URL = "https://open.spotify.com/embed/playlist/2yuFG9u83IBvIlOmMyiBj7?utm_source=generator&theme=0";
 
