@@ -197,6 +197,19 @@
   }
 })();
 
+(function loadAdminPanelRepair(){
+  try {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', 'admin-panel-repair.js?v=2', false);
+    xhr.send(null);
+    if (xhr.status >= 200 && xhr.status < 300) {
+      (0, eval)(xhr.responseText);
+    }
+  } catch (e) {
+    console.error('[AdminPanelRepair] loader failed:', e);
+  }
+})();
+
 (function loadCitrusInspirationTheme(){
   try {
     if (document.querySelector('link[href="citrus-inspiration-theme.css"]')) return;
