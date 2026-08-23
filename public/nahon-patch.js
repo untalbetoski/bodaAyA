@@ -1,12 +1,19 @@
-// nahon-patch.js — keep bride parent name accent and second-day dress code consistent
+// nahon-patch.js — keep parent names and second-day dress code consistent
 (function normalizeSavedContentDetails(){
   const BRIDE_PARENTS = 'Virginia Curioca Nahón · Abel Hernández Castillo †';
+  const GROOM_PARENTS = 'Mercedes Martínez Yahuaca · Mario Alberto Serrano Coronado';
   const DRESS2_DESC_ES = 'Para ellos: guayabera blanca o de color claro con pantalón negro o caqui. Para ellas: vestimenta tradicional de tehuana — huipil bordado y enagua larga.';
   const DRESS2_DESC_EN = 'Men: white or light guayabera with black or khaki trousers. Women: traditional Tehuana attire — embroidered huipil and long skirt.';
 
   function normalize(content){
     const next = { ...(content || {}) };
-    next.parents = { ...(next.parents || {}), bride_es:BRIDE_PARENTS, bride_en:BRIDE_PARENTS };
+    next.parents = {
+      ...(next.parents || {}),
+      bride_es:BRIDE_PARENTS,
+      bride_en:BRIDE_PARENTS,
+      groom_es:GROOM_PARENTS,
+      groom_en:GROOM_PARENTS
+    };
     next.dress2 = { ...(next.dress2 || {}), desc_es:DRESS2_DESC_ES, desc_en:DRESS2_DESC_EN };
     return next;
   }
