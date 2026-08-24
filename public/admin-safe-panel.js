@@ -1,14 +1,10 @@
-// admin-safe-panel.js — safe, isolated editor for custom wedding sections
+// admin-safe-panel.js — optimized isolated editor for welcome and dress inspiration sections
 (function adminSafePanel(){
   try {
-    if (window.__AA_ADMIN_SAFE_PANEL__) return;
-    window.__AA_ADMIN_SAFE_PANEL__ = true;
+    if (window.__AA_ADMIN_SAFE_PANEL_V3__) return;
+    window.__AA_ADMIN_SAFE_PANEL_V3__ = true;
 
-    var state = null;
-    var dirty = false;
-    var saving = false;
-
-    var DEFAULTS = {
+    const DEFAULTS = {
       welcome: {
         title_es:'Bienvenidos',
         subtitle_es:'Gracias por formar parte de nuestra historia y de este nuevo comienzo.',
@@ -56,11 +52,17 @@
       }
     };
 
+    let state = null;
+    let dirty = false;
+    let saving = false;
+    let tabsObserver = null;
+    let bodyObserver = null;
+
     function clone(obj){ return JSON.parse(JSON.stringify(obj || {})); }
     function merge(base, patch){
-      var out = Array.isArray(base) ? base.slice() : Object.assign({}, base || {});
+      const out = Array.isArray(base) ? base.slice() : Object.assign({}, base || {});
       Object.keys(patch || {}).forEach(function(k){
-        var v = patch[k];
+        const v = patch[k];
         if (v && typeof v === 'object' && !Array.isArray(v)) out[k] = merge(out[k] || {}, v);
         else if (Array.isArray(v)) out[k] = v.map(function(x){ return x && typeof x === 'object' ? Object.assign({}, x) : x; });
         else out[k] = v;
@@ -68,27 +70,28 @@
       return out;
     }
     function normalize(data){
-      var next = clone(data || {});
+      const next = clone(data || {});
       next.welcome = merge(DEFAULTS.welcome, next.welcome || {});
       next.dressAdmin = merge(DEFAULTS.dressAdmin, next.dressAdmin || {});
-      if (!next.dressAdmin.day1) next.dressAdmin.day1 = clone(DEFAULTS.dressAdmin.day1);
-      if (!next.dressAdmin.day2) next.dressAdmin.day2 = clone(DEFAULTS.dressAdmin.day2);
-      if (!Array.isArray(next.dressAdmin.day1.swatches) || !next.dressAdmin.day1.swatches.length) next.dressAdmin.day1.swatches = clone(DEFAULTS.dressAdmin.day1.swatches);
-      if (!Array.isArray(next.dressAdmin.day2.swatches) || !next.dressAdmin.day2.swatches.length) next.dressAdmin.day2.swatches = clone(DEFAULTS.dressAdmin.day2.swatches);
-      if (!Array.isArray(next.dressAdmin.day1.images) || !next.dressAdmin.day1.images.length) next.dressAdmin.day1.images = clone(DEFAULTS.dressAdmin.day1.images);
-      if (!Array.isArray(next.dressAdmin.day2.images) || !next.dressAdmin.day2.images.length) next.dressAdmin.day2.images = clone(DEFAULTS.dressAdmin.day2.images);
+      ['day1','day2'].forEach(function(day){
+        if (!Array.isArray(next.dressAdmin[day].swatches) || !next.dressAdmin[day].swatches.length) next.dressAdmin[day].swatches = clone(DEFAULTS.dressAdmin[day].swatches);
+        if (!Array.isArray(next.dressAdmin[day].images) || !next.dressAdmin[day].images.length) next.dressAdmin[day].images = clone(DEFAULTS.dressAdmin[day].images);
+      });
       return next;
     }
+    function esc(v){ return String(v == null ? '' : v).replace(/[&<>"']/g, function(ch){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]; }); }
     function getAt(path){
-      if (!state) state = normalize(window.__AA_SITE_DATA || window.DEFAULT_DATA || {});
-      return path.split('.').reduce(function(acc,p){ return acc == null ? '' : acc[/^\d+$/.test(p) ? Number(p) : p]; }, state);
+      const parts = path.split('.');
+      let cur = state;
+      parts.forEach(function(p){ cur = cur == null ? '' : cur[/^\d+$/.test(p) ? Number(p) : p]; });
+      return cur == null ? '' : cur;
     }
     function setAt(path, value){
       if (!state) state = normalize(window.__AA_SITE_DATA || window.DEFAULT_DATA || {});
-      var parts = path.split('.');
-      var cur = state;
-      for (var i=0; i<parts.length-1; i++){
-        var key = /^\d+$/.test(parts[i]) ? Number(parts[i]) : parts[i];
+      const parts = path.split('.');
+      let cur = state;
+      for (let i=0;i<parts.length-1;i++){
+        const key = /^\d+$/.test(parts[i]) ? Number(parts[i]) : parts[i];
         if (cur[key] == null) cur[key] = /^\d+$/.test(parts[i+1]) ? [] : {};
         cur = cur[key];
       }
@@ -97,18 +100,16 @@
       publishPreview();
       setStatus('Cambios sin guardar');
     }
-    function esc(v){ return String(v == null ? '' : v).replace(/[&<>"']/g, function(ch){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]; }); }
 
     function ensureStyle(){
       if (document.getElementById('aa-admin-safe-style')) return;
-      var style = document.createElement('style');
+      const style = document.createElement('style');
       style.id = 'aa-admin-safe-style';
       style.textContent = `
         .aa-safe-editor{display:flex;flex-direction:column;gap:16px;}
-        .aa-safe-note{padding:11px 12px;border:1px dashed var(--line);background:rgba(255,255,255,.72);border-radius:6px;font-size:12px;line-height:1.5;color:var(--ink-soft);}
+        .aa-safe-note{padding:12px;border:1px dashed var(--line);background:rgba(255,250,241,.72);border-radius:6px;font-size:12px;line-height:1.5;color:var(--ink-soft);}
         .aa-safe-card{padding:14px;border:1px solid var(--line);border-radius:8px;background:#fff;display:flex;flex-direction:column;gap:10px;}
         .aa-safe-title{color:var(--sage-deep)!important;}
-        .aa-safe-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
         .aa-safe-row{display:flex;flex-direction:column;gap:4px;}
         .aa-safe-row label{font-family:var(--sans);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-soft);}
         .aa-safe-row input,.aa-safe-row textarea{border:1px solid var(--line);background:#fff;font-family:var(--serif);font-size:14px;padding:8px 10px;color:var(--ink);border-radius:4px;}
@@ -122,7 +123,6 @@
         .aa-safe-btn{appearance:none;border:1px solid var(--line);background:transparent;color:var(--ink-soft);font-family:var(--sans);font-size:10px;letter-spacing:.16em;text-transform:uppercase;padding:9px 11px;cursor:pointer;border-radius:4px;}
         .aa-safe-btn.primary{border-color:var(--sage-deep);color:var(--sage-deep);background:rgba(168,184,160,.14);}
         .aa-safe-status{font-family:var(--sans);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-mute);}
-        @media(max-width:720px){.aa-safe-grid{grid-template-columns:1fr;}}
       `;
       document.head.appendChild(style);
     }
@@ -130,29 +130,31 @@
     async function loadContent(){
       try {
         if (window.MockServer && typeof window.MockServer.getContent === 'function') {
-          var r = await window.MockServer.getContent();
+          const r = await window.MockServer.getContent();
           state = normalize((r && r.data) || window.__AA_SITE_DATA || window.DEFAULT_DATA || {});
         } else {
-          var res = await fetch('/api/content', { cache:'no-store' });
-          var json = await res.json().catch(function(){ return {}; });
+          const res = await fetch('/api/content', { cache:'no-store' });
+          const json = await res.json().catch(function(){ return {}; });
           state = normalize(json.data || window.__AA_SITE_DATA || window.DEFAULT_DATA || {});
         }
       } catch(e) {
         state = normalize(window.__AA_SITE_DATA || window.DEFAULT_DATA || {});
       }
       publishPreview();
+      dirty = false;
       return state;
     }
+
     async function saveContent(){
       if (!state || saving) return;
       saving = true;
       setStatus('Guardando…');
       try {
-        var normalized = normalize(state);
-        var result = null;
+        const normalized = normalize(state);
+        let result = null;
         if (window.MockServer && typeof window.MockServer.saveContent === 'function') result = await window.MockServer.saveContent(normalized);
         else {
-          var res = await fetch('/api/content', { method:'POST', headers:{ 'Content-Type':'application/json' }, body:JSON.stringify({ data:normalized }) });
+          const res = await fetch('/api/content', { method:'POST', headers:{ 'Content-Type':'application/json' }, body:JSON.stringify({ data:normalized }) });
           result = await res.json().catch(function(){ return {}; });
           if (!res.ok) result.ok = false;
         }
@@ -165,60 +167,60 @@
         console.error('[AdminSafePanel] save failed:', e);
         setStatus('Error al guardar');
         alert('No se pudo guardar. Revisa la conexión e intenta nuevamente.');
-      } finally {
-        saving = false;
-      }
-    }
-    async function uploadImage(file){
-      var dataUrl = await new Promise(function(resolve, reject){
-        var reader = new FileReader();
-        reader.onload = function(){ resolve(reader.result); };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-      var res = await fetch('/api/gallery/upload', { method:'POST', headers:{ 'Content-Type':'application/json' }, body:JSON.stringify({ filename:file.name, dataUrl:dataUrl }) });
-      var json = await res.json().catch(function(){ return {}; });
-      if (!res.ok || !json.ok || !json.url) throw new Error('upload_failed');
-      return json.url;
+      } finally { saving = false; }
     }
 
     function publishPreview(){
-      var normalized = normalize(state || {});
+      const normalized = normalize(state || {});
       window.__AA_SITE_DATA = normalized;
       try { window.dispatchEvent(new CustomEvent('aa:content-updated', { detail:{ data:normalized } })); } catch(e) {}
       applyWelcome(normalized);
     }
+
     function applyWelcome(data){
-      var w = normalize(data || {}).welcome;
-      var section = document.getElementById('aa-welcome-message');
+      const w = normalize(data || {}).welcome;
+      const section = document.getElementById('aa-welcome-message');
       if (!section) return;
-      var setText = function(sel, text){ var el = section.querySelector(sel); if (el) el.textContent = text || ''; };
+      const setText = function(sel, text){ const el = section.querySelector(sel); if (el) el.textContent = text || ''; };
       setText('.aa-welcome-title', w.title_es);
       setText('.aa-section-sub', w.subtitle_es);
       setText('.aa-small-label', w.aside_label);
       setText('.aa-side-script', w.aside_title_es);
-      var date = section.querySelector('.aa-date-line');
+      const date = section.querySelector('.aa-date-line');
       if (date) date.innerHTML = esc(w.aside_date_es) + '<br/>' + esc(w.aside_place_es);
-      var copy = section.querySelector('.aa-welcome-copy');
+      const copy = section.querySelector('.aa-welcome-copy');
       if (copy) {
-        var pieces = [w.greeting_es].concat(String(w.body_es || '').split(/\n\s*\n/)).filter(Boolean);
+        const pieces = [w.greeting_es].concat(String(w.body_es || '').split(/\n\s*\n/)).filter(Boolean);
         copy.innerHTML = pieces.map(function(p){ return '<p>' + esc(p) + '</p>'; }).join('');
       }
       setText('.aa-with-love', w.sign_label_es);
       setText('.aa-names', w.signature);
     }
 
+    async function uploadImage(file){
+      const dataUrl = await new Promise(function(resolve, reject){
+        const reader = new FileReader();
+        reader.onload = function(){ resolve(reader.result); };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      const res = await fetch('/api/gallery/upload', { method:'POST', headers:{ 'Content-Type':'application/json' }, body:JSON.stringify({ filename:file.name, dataUrl:dataUrl }) });
+      const json = await res.json().catch(function(){ return {}; });
+      if (!res.ok || !json.ok || !json.url) throw new Error('upload_failed');
+      return json.url;
+    }
+
     function field(label, path, rows, type){
-      var val = getAt(path) || '';
+      const val = getAt(path);
       if (rows) return '<div class="aa-safe-row"><label>'+esc(label)+'</label><textarea rows="'+rows+'" data-aa-safe-path="'+esc(path)+'">'+esc(val)+'</textarea></div>';
       return '<div class="aa-safe-row"><label>'+esc(label)+'</label><input type="'+(type || 'text')+'" data-aa-safe-path="'+esc(path)+'" value="'+esc(val)+'"></div>';
     }
     function swatch(day, i){
-      var sw = getAt('dressAdmin.'+day+'.swatches.'+i) || { c:'#ffffff', l:'' };
+      const sw = getAt('dressAdmin.'+day+'.swatches.'+i) || { c:'#ffffff', l:'' };
       return '<div class="aa-safe-swatch"><input type="color" data-aa-safe-path="dressAdmin.'+day+'.swatches.'+i+'.c" value="'+esc(sw.c || '#ffffff')+'">'+field('Nombre','dressAdmin.'+day+'.swatches.'+i+'.l')+'</div>';
     }
     function imageCard(day, i){
-      var item = getAt('dressAdmin.'+day+'.images.'+i) || { label:'', img:'' };
+      const item = getAt('dressAdmin.'+day+'.images.'+i) || { label:'', img:'' };
       return '<div class="aa-safe-img-card">'+
         '<div class="micro" style="color:var(--ink-mute)">Imagen '+(i+1)+'</div>'+
         '<div class="aa-safe-img-preview">'+(item.img ? '<img src="'+esc(item.img)+'" alt="">' : 'Sin imagen')+'</div>'+
@@ -228,58 +230,47 @@
       '</div>';
     }
     function dayBlock(day, title){
-      var swatches = getAt('dressAdmin.'+day+'.swatches') || [];
-      var images = getAt('dressAdmin.'+day+'.images') || [];
-      var html = '<div class="aa-safe-card"><div class="micro aa-safe-title">'+title+' · colores</div>';
-      for (var i=0; i<swatches.length; i++) html += swatch(day, i);
-      html += '</div>';
-      html += '<div class="aa-safe-card"><div class="micro aa-safe-title">'+title+' · galería</div>'+field('Título galería','dressAdmin.'+day+'.title_es');
-      for (var j=0; j<images.length; j++) html += imageCard(day, j);
+      const swatches = getAt('dressAdmin.'+day+'.swatches') || [];
+      const images = getAt('dressAdmin.'+day+'.images') || [];
+      let html = '<div class="aa-safe-card"><div class="micro aa-safe-title">'+title+' · colores</div>';
+      for (let i=0;i<swatches.length;i++) html += swatch(day, i);
+      html += '</div><div class="aa-safe-card"><div class="micro aa-safe-title">'+title+' · galería</div>'+field('Título galería','dressAdmin.'+day+'.title_es');
+      for (let j=0;j<images.length;j++) html += imageCard(day, j);
       html += '<button type="button" class="aa-safe-btn primary" data-aa-safe-add="'+day+'">+ Agregar imagen</button></div>';
       return html;
     }
+
     function renderEditor(){
       ensureStyle();
       if (!state) state = normalize(window.__AA_SITE_DATA || window.DEFAULT_DATA || {});
-      var body = document.querySelector('.admin-panel.open .body');
+      const body = document.querySelector('.admin-panel.open .body') || document.querySelector('.admin-panel .body');
       if (!body) return;
       body.innerHTML = '<div class="aa-safe-editor">'+
         '<div class="micro aa-safe-title">Nuevas secciones</div>'+
-        '<div class="aa-safe-note">Editor aislado y seguro para la bienvenida y las galerías de inspiración del código de vestimenta. Los cambios se previsualizan en la página y se publican con el botón Guardar cambios.</div>'+
-        '<div class="aa-safe-actions"><button type="button" class="aa-safe-btn primary" data-aa-safe-save>Guardar cambios</button><span class="aa-safe-status">Sin cambios</span></div>'+
+        '<div class="aa-safe-note">Editor optimizado para la bienvenida y las galerías de inspiración del código de vestimenta. Los cambios se previsualizan y se publican con Guardar cambios.</div>'+
+        '<div class="aa-safe-actions"><button type="button" class="aa-safe-btn primary" data-aa-safe-save>Guardar cambios</button><button type="button" class="aa-safe-btn" data-aa-safe-reload>Recargar datos</button><span class="aa-safe-status">Sin cambios</span></div>'+
         '<div class="aa-safe-card"><div class="micro aa-safe-title">Bienvenida después del contador</div>'+
-          field('Título','welcome.title_es')+
-          field('Subtítulo','welcome.subtitle_es',2)+
-          field('Etiqueta lateral','welcome.aside_label')+
-          field('Frase lateral','welcome.aside_title_es')+
-          field('Fecha lateral','welcome.aside_date_es')+
-          field('Lugar','welcome.aside_place_es')+
-          field('Saludo','welcome.greeting_es')+
-          field('Mensaje','welcome.body_es',9)+
-          field('Firma intro','welcome.sign_label_es')+
-          field('Firma nombres','welcome.signature')+
+          field('Título','welcome.title_es')+field('Subtítulo','welcome.subtitle_es',2)+field('Etiqueta lateral','welcome.aside_label')+field('Frase lateral','welcome.aside_title_es')+field('Fecha lateral','welcome.aside_date_es')+field('Lugar','welcome.aside_place_es')+field('Saludo','welcome.greeting_es')+field('Mensaje','welcome.body_es',9)+field('Firma intro','welcome.sign_label_es')+field('Firma nombres','welcome.signature')+
         '</div>'+
-        '<div class="aa-safe-card"><div class="micro aa-safe-title">Código de vestimenta</div>'+field('Texto sobre colores','dressAdmin.colorsLabel_es')+'</div>'+
-        dayBlock('day1','Día 1')+
-        dayBlock('day2','Día 2')+
+        '<div class="aa-safe-card"><div class="micro aa-safe-title">Código de vestimenta</div>'+field('Texto sobre colores','dressAdmin.colorsLabel_es')+'</div>'+dayBlock('day1','Día 1')+dayBlock('day2','Día 2')+
       '</div>';
       bindEditor(body);
       setStatus(dirty ? 'Cambios sin guardar' : 'Sin cambios');
     }
+
     function bindEditor(body){
       body.querySelectorAll('[data-aa-safe-path]').forEach(function(el){
-        var handler = function(){ setAt(el.getAttribute('data-aa-safe-path'), el.value); };
+        const handler = function(){ setAt(el.getAttribute('data-aa-safe-path'), el.value); };
         el.addEventListener('input', handler);
         el.addEventListener('change', handler);
       });
       body.querySelectorAll('[data-aa-safe-save]').forEach(function(btn){ btn.addEventListener('click', saveContent); });
-      body.querySelectorAll('[data-aa-safe-clear]').forEach(function(btn){
-        btn.addEventListener('click', function(){ setAt(btn.getAttribute('data-aa-safe-clear'), ''); renderEditor(); });
-      });
+      body.querySelectorAll('[data-aa-safe-reload]').forEach(function(btn){ btn.addEventListener('click', async function(){ setStatus('Recargando…'); await loadContent(); renderEditor(); }); });
+      body.querySelectorAll('[data-aa-safe-clear]').forEach(function(btn){ btn.addEventListener('click', function(){ setAt(btn.getAttribute('data-aa-safe-clear'), ''); renderEditor(); }); });
       body.querySelectorAll('[data-aa-safe-add]').forEach(function(btn){
         btn.addEventListener('click', function(){
-          var day = btn.getAttribute('data-aa-safe-add');
-          var arr = getAt('dressAdmin.'+day+'.images') || [];
+          const day = btn.getAttribute('data-aa-safe-add');
+          const arr = (getAt('dressAdmin.'+day+'.images') || []).slice();
           arr.push({ label:'Nueva inspiración', img:'' });
           setAt('dressAdmin.'+day+'.images', arr);
           renderEditor();
@@ -287,11 +278,11 @@
       });
       body.querySelectorAll('[data-aa-safe-file]').forEach(function(input){
         input.addEventListener('change', async function(){
-          var file = input.files && input.files[0];
+          const file = input.files && input.files[0];
           if (!file) return;
           setStatus('Subiendo imagen…');
           try {
-            var url = await uploadImage(file);
+            const url = await uploadImage(file);
             setAt(input.getAttribute('data-aa-safe-file'), url);
             renderEditor();
           } catch(e) {
@@ -302,44 +293,55 @@
         });
       });
     }
+
     function setStatus(text){
       document.querySelectorAll('.aa-safe-status').forEach(function(el){ el.textContent = text; });
     }
 
     async function activate(){
-      var panel = document.querySelector('.admin-panel.open');
+      const panel = document.querySelector('.admin-panel.open') || document.querySelector('.admin-panel');
       if (!panel) return;
       panel.querySelectorAll('.tabs button').forEach(function(b){ b.classList.remove('on'); });
-      var own = panel.querySelector('[data-aa-safe-tab]');
+      const own = panel.querySelector('[data-aa-safe-tab]');
       if (own) own.classList.add('on');
-      var body = panel.querySelector('.body');
+      const body = panel.querySelector('.body');
       if (body) body.innerHTML = '<div class="micro" style="color:var(--ink-mute)">Cargando editor seguro…</div>';
       await loadContent();
       renderEditor();
     }
+
     function injectTab(){
       ensureStyle();
-      var panel = document.querySelector('.admin-panel');
-      var tabs = panel && panel.querySelector('.tabs');
+      const panel = document.querySelector('.admin-panel');
+      const tabs = panel && panel.querySelector('.tabs');
       if (!tabs) return false;
-      if (!tabs.querySelector('[data-aa-safe-tab]')) {
-        var btn = document.createElement('button');
+      let btn = tabs.querySelector('[data-aa-safe-tab]');
+      if (!btn) {
+        btn = document.createElement('button');
         btn.type = 'button';
         btn.textContent = 'Nuevas secciones';
         btn.setAttribute('data-aa-safe-tab','1');
         btn.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); activate(); });
         tabs.appendChild(btn);
       }
+      if (!tabsObserver) {
+        tabsObserver = new MutationObserver(function(){ injectTab(); });
+        tabsObserver.observe(tabs, { childList:true });
+      }
       return true;
     }
 
-    window.AA_ADMIN_SAFE_RELOAD = loadContent;
-    window.addEventListener('aa:content-updated', function(e){
-      if (e && e.detail && e.detail.data) applyWelcome(e.detail.data);
-    });
-    setTimeout(function(){ loadContent().catch(function(){}); }, 1200);
-    setInterval(injectTab, 900);
-    new MutationObserver(injectTab).observe(document.documentElement, { childList:true, subtree:true });
+    function start(){
+      ensureStyle();
+      injectTab();
+      bodyObserver = new MutationObserver(function(){ if (injectTab() && bodyObserver) { bodyObserver.disconnect(); bodyObserver = null; } });
+      bodyObserver.observe(document.documentElement, { childList:true, subtree:true });
+      setTimeout(function(){ if (bodyObserver) { bodyObserver.disconnect(); bodyObserver = null; } }, 30000);
+      setTimeout(function(){ loadContent().catch(function(){}); }, 900);
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once:true });
+    else start();
   } catch(err) {
     console.error('[AdminSafePanel] disabled after error:', err);
   }
