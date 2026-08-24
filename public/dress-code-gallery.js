@@ -62,6 +62,10 @@
       });
       return next;
     }
+    function galleryKey(day){
+      try { return day + ':' + JSON.stringify(config[day] || {}) + ':' + (config.colorsLabel_es || ''); }
+      catch(e) { return day + ':' + Date.now(); }
+    }
 
     function addStyle(){
       if (document.getElementById('aa-dress-code-gallery-style')) return;
@@ -110,6 +114,7 @@
       while (images.length < 3) images.push({ label:'Inspiración', img:'' });
       const wrap = document.createElement('div');
       wrap.className = 'aa-dress-gallery ' + day;
+      wrap.setAttribute('data-aa-dress-gallery-key', galleryKey(day));
       wrap.innerHTML = '<div class="aa-dress-gallery-title">' + esc(dayConfig.title_es || 'Galería de inspiración') + '</div><div class="aa-dress-gallery-grid"></div>';
       const grid = wrap.querySelector('.aa-dress-gallery-grid');
       grid.appendChild(tile(images[0], 'aa-dress-gallery-main', day));
@@ -153,7 +158,9 @@
         const day = index === 0 ? 'day1' : 'day2';
         const card = grid.parentNode;
         if (!card) return;
+        const key = galleryKey(day);
         const old = card.querySelector('.aa-dress-gallery');
+        if (old && old.getAttribute('data-aa-dress-gallery-key') === key) return;
         const next = buildGallery(day);
         if (old) old.replaceWith(next);
         else grid.insertAdjacentElement('afterend', next);
