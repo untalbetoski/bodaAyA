@@ -1,8 +1,8 @@
-// admin-safe-panel.js — optimized isolated editor for welcome and dress inspiration sections
+// admin-safe-panel.js — isolated modal editor for extra wedding sections
 (function adminSafePanel(){
   try {
-    if (window.__AA_ADMIN_SAFE_PANEL_V3__) return;
-    window.__AA_ADMIN_SAFE_PANEL_V3__ = true;
+    if (window.__AA_ADMIN_SAFE_PANEL_V4__) return;
+    window.__AA_ADMIN_SAFE_PANEL_V4__ = true;
 
     const DEFAULTS = {
       welcome: {
@@ -55,8 +55,7 @@
     let state = null;
     let dirty = false;
     let saving = false;
-    let tabsObserver = null;
-    let bodyObserver = null;
+    let injected = false;
 
     function clone(obj){ return JSON.parse(JSON.stringify(obj || {})); }
     function merge(base, patch){
@@ -102,27 +101,37 @@
     }
 
     function ensureStyle(){
-      if (document.getElementById('aa-admin-safe-style')) return;
+      if (document.getElementById('aa-admin-safe-style-v4')) return;
       const style = document.createElement('style');
-      style.id = 'aa-admin-safe-style';
+      style.id = 'aa-admin-safe-style-v4';
       style.textContent = `
-        .aa-safe-editor{display:flex;flex-direction:column;gap:16px;}
-        .aa-safe-note{padding:12px;border:1px dashed var(--line);background:rgba(255,250,241,.72);border-radius:6px;font-size:12px;line-height:1.5;color:var(--ink-soft);}
-        .aa-safe-card{padding:14px;border:1px solid var(--line);border-radius:8px;background:#fff;display:flex;flex-direction:column;gap:10px;}
-        .aa-safe-title{color:var(--sage-deep)!important;}
-        .aa-safe-row{display:flex;flex-direction:column;gap:4px;}
-        .aa-safe-row label{font-family:var(--sans);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-soft);}
-        .aa-safe-row input,.aa-safe-row textarea{border:1px solid var(--line);background:#fff;font-family:var(--serif);font-size:14px;padding:8px 10px;color:var(--ink);border-radius:4px;}
-        .aa-safe-row textarea{resize:vertical;min-height:70px;}
-        .aa-safe-swatch{display:grid;grid-template-columns:48px 1fr;gap:8px;align-items:end;padding:8px;border:1px solid var(--line);border-radius:6px;background:#fff;}
-        .aa-safe-swatch input[type=color]{width:42px;height:34px;padding:0;border:1px solid var(--line);background:#fff;border-radius:4px;}
-        .aa-safe-img-card{padding:12px;border:1px solid var(--line);border-radius:7px;background:#fff;display:grid;gap:9px;}
-        .aa-safe-img-preview{height:104px;border:1px solid var(--line);border-radius:5px;overflow:hidden;background:var(--paper-2);display:flex;align-items:center;justify-content:center;color:var(--ink-mute);font-size:10px;}
+        .aa-safe-open-btn{appearance:none;border:1px solid var(--line);background:rgba(255,255,255,.45);color:var(--ink-soft);font-family:var(--sans);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;padding:8px 10px;border-radius:999px;cursor:pointer;margin-left:auto;margin-right:10px;white-space:nowrap;}
+        .aa-safe-open-btn:hover{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+        .aa-safe-back{position:fixed;inset:0;z-index:420;background:rgba(34,26,14,.46);backdrop-filter:blur(7px);display:flex;align-items:center;justify-content:center;padding:22px;}
+        .aa-safe-modal{width:min(920px,100%);max-height:88vh;overflow:hidden;background:#fffdf8;border:1px solid var(--line);box-shadow:0 28px 90px -32px rgba(0,0,0,.45);display:grid;grid-template-rows:auto 1fr auto;}
+        .aa-safe-hd{display:flex;align-items:center;gap:12px;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line);}
+        .aa-safe-hd h3{margin:0;font-family:var(--display);font-size:18px;letter-spacing:.08em;color:var(--ink);font-weight:400;}
+        .aa-safe-close{appearance:none;border:0;background:transparent;cursor:pointer;font-size:20px;color:var(--ink-soft);}
+        .aa-safe-body{overflow:auto;padding:22px;display:grid;gap:16px;}
+        .aa-safe-note{padding:12px 14px;border:1px dashed var(--line);background:rgba(255,250,241,.78);border-radius:8px;font-size:12px;line-height:1.5;color:var(--ink-soft);}
+        .aa-safe-card{padding:14px;border:1px solid var(--line);border-radius:10px;background:#fff;display:grid;gap:10px;}
+        .aa-safe-card-title{font-family:var(--sans);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--sage-deep);}
+        .aa-safe-row{display:grid;gap:4px;}
+        .aa-safe-row label{font-family:var(--sans);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft);}
+        .aa-safe-row input,.aa-safe-row textarea{width:100%;border:1px solid var(--line);background:#fff;font-family:var(--serif);font-size:14px;padding:8px 10px;color:var(--ink);border-radius:5px;}
+        .aa-safe-row textarea{resize:vertical;min-height:76px;}
+        .aa-safe-two{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+        .aa-safe-swatch{display:grid;grid-template-columns:52px 1fr;gap:9px;align-items:end;padding:8px;border:1px solid var(--line);border-radius:7px;background:#fff;}
+        .aa-safe-swatch input[type=color]{width:44px;height:36px;padding:0;border:1px solid var(--line);background:#fff;border-radius:5px;}
+        .aa-safe-img-card{display:grid;grid-template-columns:112px 1fr;gap:12px;align-items:start;padding:12px;border:1px solid var(--line);border-radius:8px;background:#fff;}
+        .aa-safe-img-preview{height:112px;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--paper-2);display:flex;align-items:center;justify-content:center;color:var(--ink-mute);font-size:10px;text-align:center;}
         .aa-safe-img-preview img{width:100%;height:100%;object-fit:cover;display:block;}
         .aa-safe-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
-        .aa-safe-btn{appearance:none;border:1px solid var(--line);background:transparent;color:var(--ink-soft);font-family:var(--sans);font-size:10px;letter-spacing:.16em;text-transform:uppercase;padding:9px 11px;cursor:pointer;border-radius:4px;}
+        .aa-safe-btn{appearance:none;border:1px solid var(--line);background:transparent;color:var(--ink-soft);font-family:var(--sans);font-size:10px;letter-spacing:.16em;text-transform:uppercase;padding:9px 11px;cursor:pointer;border-radius:5px;}
         .aa-safe-btn.primary{border-color:var(--sage-deep);color:var(--sage-deep);background:rgba(168,184,160,.14);}
-        .aa-safe-status{font-family:var(--sans);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-mute);}
+        .aa-safe-ft{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 22px;border-top:1px solid var(--line);background:#fffdf8;}
+        .aa-safe-status{font-family:var(--sans);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-mute);}
+        @media(max-width:720px){.aa-safe-modal{max-height:92vh}.aa-safe-two{grid-template-columns:1fr}.aa-safe-img-card{grid-template-columns:1fr}.aa-safe-img-preview{height:160px}.aa-safe-open-btn{font-size:8.5px;padding:7px 8px;}}
       `;
       document.head.appendChild(style);
     }
@@ -140,8 +149,8 @@
       } catch(e) {
         state = normalize(window.__AA_SITE_DATA || window.DEFAULT_DATA || {});
       }
-      publishPreview();
       dirty = false;
+      publishPreview();
       return state;
     }
 
@@ -151,18 +160,21 @@
       setStatus('Guardando…');
       try {
         const normalized = normalize(state);
-        let result = null;
-        if (window.MockServer && typeof window.MockServer.saveContent === 'function') result = await window.MockServer.saveContent(normalized);
-        else {
+        let ok = false;
+        try {
           const res = await fetch('/api/content', { method:'POST', headers:{ 'Content-Type':'application/json' }, body:JSON.stringify({ data:normalized }) });
-          result = await res.json().catch(function(){ return {}; });
-          if (!res.ok) result.ok = false;
+          const json = await res.json().catch(function(){ return {}; });
+          ok = !!(res.ok && json.ok);
+        } catch(e) { ok = false; }
+        if (!ok && window.MockServer && typeof window.MockServer.saveContent === 'function') {
+          const r = await window.MockServer.saveContent(normalized);
+          ok = !!(r && r.ok);
         }
-        if (!result || result.ok === false) throw new Error('save_failed');
+        if (!ok) throw new Error('save_failed');
         state = normalized;
         dirty = false;
         publishPreview();
-        setStatus('Guardado');
+        setStatus('Guardado correctamente');
       } catch(e) {
         console.error('[AdminSafePanel] save failed:', e);
         setStatus('Error al guardar');
@@ -210,6 +222,8 @@
       return json.url;
     }
 
+    function setStatus(text){ document.querySelectorAll('.aa-safe-status').forEach(function(el){ el.textContent = text; }); }
+
     function field(label, path, rows, type){
       const val = getAt(path);
       if (rows) return '<div class="aa-safe-row"><label>'+esc(label)+'</label><textarea rows="'+rows+'" data-aa-safe-path="'+esc(path)+'">'+esc(val)+'</textarea></div>';
@@ -222,52 +236,46 @@
     function imageCard(day, i){
       const item = getAt('dressAdmin.'+day+'.images.'+i) || { label:'', img:'' };
       return '<div class="aa-safe-img-card">'+
-        '<div class="micro" style="color:var(--ink-mute)">Imagen '+(i+1)+'</div>'+
         '<div class="aa-safe-img-preview">'+(item.img ? '<img src="'+esc(item.img)+'" alt="">' : 'Sin imagen')+'</div>'+
-        field('Etiqueta','dressAdmin.'+day+'.images.'+i+'.label')+
-        field('URL','dressAdmin.'+day+'.images.'+i+'.img',0,'url')+
-        '<div class="aa-safe-actions"><input type="file" accept="image/*" data-aa-safe-file="dressAdmin.'+day+'.images.'+i+'.img"><button type="button" class="aa-safe-btn" data-aa-safe-clear="dressAdmin.'+day+'.images.'+i+'.img">Quitar</button></div>'+
-      '</div>';
+        '<div style="display:grid;gap:8px">'+
+          '<div class="aa-safe-card-title">Imagen '+(i+1)+'</div>'+field('Etiqueta','dressAdmin.'+day+'.images.'+i+'.label')+field('URL','dressAdmin.'+day+'.images.'+i+'.img',0,'url')+
+          '<div class="aa-safe-actions"><input type="file" accept="image/*" data-aa-safe-file="dressAdmin.'+day+'.images.'+i+'.img"><button type="button" class="aa-safe-btn" data-aa-safe-clear="dressAdmin.'+day+'.images.'+i+'.img">Quitar</button></div>'+ 
+        '</div></div>';
     }
     function dayBlock(day, title){
       const swatches = getAt('dressAdmin.'+day+'.swatches') || [];
       const images = getAt('dressAdmin.'+day+'.images') || [];
-      let html = '<div class="aa-safe-card"><div class="micro aa-safe-title">'+title+' · colores</div>';
+      let html = '<div class="aa-safe-card"><div class="aa-safe-card-title">'+title+' · colores</div>';
       for (let i=0;i<swatches.length;i++) html += swatch(day, i);
-      html += '</div><div class="aa-safe-card"><div class="micro aa-safe-title">'+title+' · galería</div>'+field('Título galería','dressAdmin.'+day+'.title_es');
+      html += '</div><div class="aa-safe-card"><div class="aa-safe-card-title">'+title+' · galería</div>'+field('Título galería','dressAdmin.'+day+'.title_es');
       for (let j=0;j<images.length;j++) html += imageCard(day, j);
       html += '<button type="button" class="aa-safe-btn primary" data-aa-safe-add="'+day+'">+ Agregar imagen</button></div>';
       return html;
     }
 
-    function renderEditor(){
-      ensureStyle();
-      if (!state) state = normalize(window.__AA_SITE_DATA || window.DEFAULT_DATA || {});
-      const body = document.querySelector('.admin-panel.open .body') || document.querySelector('.admin-panel .body');
-      if (!body) return;
-      body.innerHTML = '<div class="aa-safe-editor">'+
-        '<div class="micro aa-safe-title">Nuevas secciones</div>'+
-        '<div class="aa-safe-note">Editor optimizado para la bienvenida y las galerías de inspiración del código de vestimenta. Los cambios se previsualizan y se publican con Guardar cambios.</div>'+
-        '<div class="aa-safe-actions"><button type="button" class="aa-safe-btn primary" data-aa-safe-save>Guardar cambios</button><button type="button" class="aa-safe-btn" data-aa-safe-reload>Recargar datos</button><span class="aa-safe-status">Sin cambios</span></div>'+
-        '<div class="aa-safe-card"><div class="micro aa-safe-title">Bienvenida después del contador</div>'+
-          field('Título','welcome.title_es')+field('Subtítulo','welcome.subtitle_es',2)+field('Etiqueta lateral','welcome.aside_label')+field('Frase lateral','welcome.aside_title_es')+field('Fecha lateral','welcome.aside_date_es')+field('Lugar','welcome.aside_place_es')+field('Saludo','welcome.greeting_es')+field('Mensaje','welcome.body_es',9)+field('Firma intro','welcome.sign_label_es')+field('Firma nombres','welcome.signature')+
-        '</div>'+
-        '<div class="aa-safe-card"><div class="micro aa-safe-title">Código de vestimenta</div>'+field('Texto sobre colores','dressAdmin.colorsLabel_es')+'</div>'+dayBlock('day1','Día 1')+dayBlock('day2','Día 2')+
-      '</div>';
-      bindEditor(body);
-      setStatus(dirty ? 'Cambios sin guardar' : 'Sin cambios');
+    function editorHtml(){
+      return '<div class="aa-safe-note">Este editor ya no modifica las pestañas del panel principal. Edita, revisa la vista previa y presiona “Guardar cambios”.</div>'+ 
+        '<div class="aa-safe-card"><div class="aa-safe-card-title">Bienvenida después del contador</div>'+
+          field('Título','welcome.title_es')+field('Subtítulo','welcome.subtitle_es',2)+
+          '<div class="aa-safe-two">'+field('Etiqueta lateral','welcome.aside_label')+field('Frase lateral','welcome.aside_title_es')+'</div>'+ 
+          '<div class="aa-safe-two">'+field('Fecha lateral','welcome.aside_date_es')+field('Lugar','welcome.aside_place_es')+'</div>'+ 
+          field('Saludo','welcome.greeting_es')+field('Mensaje','welcome.body_es',8)+
+          '<div class="aa-safe-two">'+field('Firma intro','welcome.sign_label_es')+field('Firma nombres','welcome.signature')+'</div>'+ 
+        '</div>'+ 
+        '<div class="aa-safe-card"><div class="aa-safe-card-title">Código de vestimenta</div>'+field('Texto sobre colores','dressAdmin.colorsLabel_es')+'</div>'+ 
+        dayBlock('day1','Día 1')+dayBlock('day2','Día 2');
     }
 
-    function bindEditor(body){
-      body.querySelectorAll('[data-aa-safe-path]').forEach(function(el){
+    function bindEditor(root){
+      root.querySelectorAll('[data-aa-safe-path]').forEach(function(el){
         const handler = function(){ setAt(el.getAttribute('data-aa-safe-path'), el.value); };
         el.addEventListener('input', handler);
         el.addEventListener('change', handler);
       });
-      body.querySelectorAll('[data-aa-safe-save]').forEach(function(btn){ btn.addEventListener('click', saveContent); });
-      body.querySelectorAll('[data-aa-safe-reload]').forEach(function(btn){ btn.addEventListener('click', async function(){ setStatus('Recargando…'); await loadContent(); renderEditor(); }); });
-      body.querySelectorAll('[data-aa-safe-clear]').forEach(function(btn){ btn.addEventListener('click', function(){ setAt(btn.getAttribute('data-aa-safe-clear'), ''); renderEditor(); }); });
-      body.querySelectorAll('[data-aa-safe-add]').forEach(function(btn){
+      root.querySelectorAll('[data-aa-safe-clear]').forEach(function(btn){
+        btn.addEventListener('click', function(){ setAt(btn.getAttribute('data-aa-safe-clear'), ''); renderEditor(); });
+      });
+      root.querySelectorAll('[data-aa-safe-add]').forEach(function(btn){
         btn.addEventListener('click', function(){
           const day = btn.getAttribute('data-aa-safe-add');
           const arr = (getAt('dressAdmin.'+day+'.images') || []).slice();
@@ -276,7 +284,7 @@
           renderEditor();
         });
       });
-      body.querySelectorAll('[data-aa-safe-file]').forEach(function(input){
+      root.querySelectorAll('[data-aa-safe-file]').forEach(function(input){
         input.addEventListener('change', async function(){
           const file = input.files && input.files[0];
           if (!file) return;
@@ -285,6 +293,7 @@
             const url = await uploadImage(file);
             setAt(input.getAttribute('data-aa-safe-file'), url);
             renderEditor();
+            setStatus('Imagen subida · cambios sin guardar');
           } catch(e) {
             console.error('[AdminSafePanel] upload failed:', e);
             setStatus('Error al subir imagen');
@@ -294,50 +303,66 @@
       });
     }
 
-    function setStatus(text){
-      document.querySelectorAll('.aa-safe-status').forEach(function(el){ el.textContent = text; });
+    function renderEditor(){
+      const body = document.querySelector('.aa-safe-body');
+      if (!body) return;
+      body.innerHTML = editorHtml();
+      bindEditor(body);
+      setStatus(dirty ? 'Cambios sin guardar' : 'Listo');
     }
 
-    async function activate(){
-      const panel = document.querySelector('.admin-panel.open') || document.querySelector('.admin-panel');
-      if (!panel) return;
-      panel.querySelectorAll('.tabs button').forEach(function(b){ b.classList.remove('on'); });
-      const own = panel.querySelector('[data-aa-safe-tab]');
-      if (own) own.classList.add('on');
-      const body = panel.querySelector('.body');
-      if (body) body.innerHTML = '<div class="micro" style="color:var(--ink-mute)">Cargando editor seguro…</div>';
+    async function openEditor(){
+      ensureStyle();
+      closeEditor();
+      const back = document.createElement('div');
+      back.className = 'aa-safe-back';
+      back.innerHTML = '<div class="aa-safe-modal" role="dialog" aria-modal="true"><div class="aa-safe-hd"><h3>Nuevas secciones</h3><button type="button" class="aa-safe-close" aria-label="Cerrar">×</button></div><div class="aa-safe-body"><div class="aa-safe-note">Cargando datos guardados…</div></div><div class="aa-safe-ft"><span class="aa-safe-status">Cargando…</span><div class="aa-safe-actions"><button type="button" class="aa-safe-btn" data-aa-safe-reload>Recargar datos</button><button type="button" class="aa-safe-btn primary" data-aa-safe-save>Guardar cambios</button></div></div></div>';
+      document.body.appendChild(back);
+      back.addEventListener('click', function(e){ if (e.target === back) closeWithPrompt(); });
+      back.querySelector('.aa-safe-close').addEventListener('click', closeWithPrompt);
+      back.querySelector('[data-aa-safe-save]').addEventListener('click', saveContent);
+      back.querySelector('[data-aa-safe-reload]').addEventListener('click', async function(){ setStatus('Recargando…'); await loadContent(); renderEditor(); });
       await loadContent();
       renderEditor();
     }
 
-    function injectTab(){
+    function closeEditor(){ const old = document.querySelector('.aa-safe-back'); if (old) old.remove(); }
+    function closeWithPrompt(){
+      if (dirty && !confirm('Hay cambios sin guardar. ¿Cerrar de todos modos?')) return;
+      closeEditor();
+    }
+
+    function injectButton(){
       ensureStyle();
       const panel = document.querySelector('.admin-panel');
-      const tabs = panel && panel.querySelector('.tabs');
-      if (!tabs) return false;
-      let btn = tabs.querySelector('[data-aa-safe-tab]');
-      if (!btn) {
-        btn = document.createElement('button');
-        btn.type = 'button';
-        btn.textContent = 'Nuevas secciones';
-        btn.setAttribute('data-aa-safe-tab','1');
-        btn.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); activate(); });
-        tabs.appendChild(btn);
-      }
-      if (!tabsObserver) {
-        tabsObserver = new MutationObserver(function(){ injectTab(); });
-        tabsObserver.observe(tabs, { childList:true });
-      }
+      const hd = panel && panel.querySelector('.hd');
+      if (!hd) return false;
+      if (hd.querySelector('.aa-safe-open-btn')) return true;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'aa-safe-open-btn';
+      btn.textContent = 'Nuevas secciones';
+      btn.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); openEditor(); });
+      const close = hd.querySelector('button');
+      if (close && close.parentNode === hd) hd.insertBefore(btn, close);
+      else hd.appendChild(btn);
+      injected = true;
       return true;
     }
 
     function start(){
-      ensureStyle();
-      injectTab();
-      bodyObserver = new MutationObserver(function(){ if (injectTab() && bodyObserver) { bodyObserver.disconnect(); bodyObserver = null; } });
-      bodyObserver.observe(document.documentElement, { childList:true, subtree:true });
-      setTimeout(function(){ if (bodyObserver) { bodyObserver.disconnect(); bodyObserver = null; } }, 30000);
-      setTimeout(function(){ loadContent().catch(function(){}); }, 900);
+      let tries = 0;
+      const timer = setInterval(function(){
+        tries += 1;
+        if (injectButton() || tries > 40) clearInterval(timer);
+      }, 300);
+      setTimeout(injectButton, 1500);
+      document.addEventListener('keydown', function(e){
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'n') {
+          const panelOpen = document.querySelector('.admin-panel.open');
+          if (panelOpen) { e.preventDefault(); openEditor(); }
+        }
+      });
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once:true });
