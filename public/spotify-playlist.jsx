@@ -80,6 +80,19 @@
   }
 })();
 
+(function loadEventMapAutogenerator(){
+  try {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', 'event-map-autogenerator.js?v=1', false);
+    xhr.send(null);
+    if (xhr.status >= 200 && xhr.status < 300) {
+      (0, eval)(xhr.responseText);
+    }
+  } catch (e) {
+    console.error('[EventMapAutogenerator] loader failed:', e);
+  }
+})();
+
 (function loadNahonAccentPatch(){
   try {
     const xhr = new XMLHttpRequest();
