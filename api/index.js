@@ -37,6 +37,52 @@ function sanitizeName(name = 'foto') {
   return String(name).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, '').toLowerCase().slice(0, 80) || 'foto';
 }
 
+const EVENT_KEYS = ['icebreaker', 'ceremony', 'reception', 'traditional'];
+const DEFAULT_MAP_QUERIES = {
+  icebreaker: 'Mal de Amor, Santiago Matatlán, Oaxaca',
+  ceremony: 'Templo de Santo Domingo de Guzmán, Oaxaca de Juárez, Oaxaca',
+  reception: 'Cardenal Oaxaca Social Venue, Oaxaca de Juárez, Oaxaca',
+  traditional: 'Oaxaca de Juárez, Oaxaca'
+};
+
+function cleanText(value) {
+  return String(value || '').replace(/\s+/g, ' ').trim();
+}
+
+function eventMapQuery(ev, key) {
+  if (!ev) return DEFAULT_MAP_QUERIES[key] || 'Oaxaca, México';
+  const venue = cleanText(ev.venue);
+  const address = cleanText(ev.address_es || ev.address_en || ev.address);
+  const parts = [];
+  if (venue) parts.push(venue);
+  if (address && address.toLowerCase() !== venue.toLowerCase()) parts.push(address);
+  const query = cleanText(parts.join(', '));
+  return query || DEFAULT_MAP_QUERIES[key] || 'Oaxaca, México';
+}
+
+function googleMapsEmbed(query) {
+  return 'https://www.google.com/maps?q=' + encodeURIComponent(query) + '&output=embed';
+}
+
+function googleMapsPublic(query) {
+  return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(query);
+}
+
+function normalizeEventMaps(content) {
+  const next = { ...(content || {}) };
+  EVENT_KEYS.forEach((key) => {
+    if (!next[key]) return;
+    const query = eventMapQuery(next[key], key);
+    next[key] = {
+      ...next[key],
+      map: googleMapsEmbed(query),
+      map_query: query,
+      map_url: googleMapsPublic(query)
+    };
+  });
+  return next;
+}
+
 async function getRemoteContent() {
   if (!cloudReady()) throw new Error('Cloud storage is not configured');
   const { data, error } = await cloud.storage.from(GALLERY_BUCKET).download(CONTENT_OBJECT);
@@ -44,19 +90,20 @@ async function getRemoteContent() {
     if (/not found|object not found/i.test(error.message || '')) return null;
     throw error;
   }
-  return JSON.parse(await data.text());
+  return normalizeEventMaps(JSON.parse(await data.text()));
 }
 
 async function saveRemoteContent(data) {
   if (!cloudReady()) throw new Error('Cloud storage is not configured');
-  const body = Buffer.from(JSON.stringify(data, null, 2), 'utf8');
+  const normalized = normalizeEventMaps(data);
+  const body = Buffer.from(JSON.stringify(normalized, null, 2), 'utf8');
   const { error } = await cloud.storage.from(GALLERY_BUCKET).upload(CONTENT_OBJECT, body, {
     contentType:'application/json; charset=utf-8',
     upsert:true,
     cacheControl:'0'
   });
   if (error) throw error;
-  return true;
+  return normalized;
 }
 
 app.get('/api/content', async (req, res) => {
@@ -67,7 +114,7 @@ app.get('/api/content', async (req, res) => {
   } catch(e) {
     console.error('[content:get]', e);
     const local = await readJSON('content.json');
-    return res.status(503).json({ ok:false, data:local || null, source:'fallback', error:e.message });
+    return res.status(503).json({ ok:false, data:local ? normalizeEventMaps(local) : null, source:'fallback', error:e.message });
   }
 });
 
@@ -75,9 +122,9 @@ app.post('/api/content', async (req, res) => {
   try {
     const { data } = req.body || {};
     if (!data) return res.status(400).json({ ok:false, error:'No data' });
-    await saveRemoteContent(data);
-    await writeJSON('content.json', data);
-    return res.json({ ok:true, savedAt:new Date().toISOString(), remoteSaved:true, source:'cloud-storage' });
+    const normalized = await saveRemoteContent(data);
+    await writeJSON('content.json', normalized);
+    return res.json({ ok:true, savedAt:new Date().toISOString(), remoteSaved:true, source:'cloud-storage', data:normalized });
   } catch(e) {
     console.error('[content:save]', e);
     return res.status(503).json({ ok:false, remoteSaved:false, error:e.message });
