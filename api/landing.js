@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const SITE_URL = 'https://andreayalberto.click/';
-const OG_IMAGE = 'https://andreayalberto.click/api/og-preview';
+const OG_IMAGE = 'https://andreayalberto.click/api/og-preview?v=20260825-save-the-date';
 const TITLE = 'Andrea y Alberto | Oaxaca 2027';
 const DESCRIPTION = '16 y 17 de abril 2027 | Oaxaca de Juárez, México. Confirma tu asistencia.';
 
