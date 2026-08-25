@@ -4,26 +4,29 @@
   "env": {
     "NODE_ENV": "production"
   },
-  "rewrites": [
+  "routes": [
     {
-      "source": "/api/og-preview",
-      "destination": "/api/og-preview"
+      "src": "^/$",
+      "dest": "/api/landing.js"
     },
     {
-      "source": "/api/landing",
-      "destination": "/api/landing"
+      "src": "^/api/og-preview$",
+      "dest": "/api/og-preview.js"
     },
     {
-      "source": "/",
-      "destination": "/api/landing"
+      "src": "^/api/landing$",
+      "dest": "/api/landing.js"
     },
     {
-      "source": "/api/:path*",
-      "destination": "/api"
+      "src": "^/api/(.*)$",
+      "dest": "/api/index.js"
     },
     {
-      "source": "/(.*)",
-      "destination": "/public/index.html"
+      "handle": "filesystem"
+    },
+    {
+      "src": "^/(.*)$",
+      "dest": "/public/index.html"
     }
   ]
 }
