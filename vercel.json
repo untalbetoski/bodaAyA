@@ -6,6 +6,18 @@
   },
   "rewrites": [
     {
+      "source": "/api/og-preview",
+      "destination": "/api/og-preview"
+    },
+    {
+      "source": "/api/landing",
+      "destination": "/api/landing"
+    },
+    {
+      "source": "/",
+      "destination": "/api/landing"
+    },
+    {
       "source": "/api/:path*",
       "destination": "/api"
     },
