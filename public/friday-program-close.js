@@ -1,10 +1,10 @@
-// friday-program-close.js — program normalization: Ice Breaker + Friday wedding + Traditional wedding
-(function fixProgramDaysSafely(){
+// friday-program-close.js — visual 3-day program: Ice Breaker + Friday wedding + Traditional wedding
+(function showProgramDaysSafely(){
   try {
-    if (window.__AA_PROGRAM_DAYS_V2__) return;
-    window.__AA_PROGRAM_DAYS_V2__ = true;
+    if (window.__AA_PROGRAM_DAYS_V3__) return;
+    window.__AA_PROGRAM_DAYS_V3__ = true;
 
-    const FRIDAY_CLOSE = {
+    const FALLBACK_FRIDAY_CLOSE = {
       time: '2:00 am',
       title_es: 'Cierre con baile',
       title_en: 'Closing dance',
@@ -25,30 +25,6 @@
       return text.indexOf('tradicional') >= 0 || text.indexOf('traditional') >= 0 || text.indexOf('calenda') >= 0 || text.indexOf('marmota') >= 0 || text.indexOf('comida') >= 0 || text.indexOf('mezcal') >= 0 || text.indexOf('lunch') >= 0;
     }
 
-    function normalizeItinerary(items){
-      const base = Array.isArray(items) ? items.map(function(it){ return Object.assign({}, it || {}); }) : [];
-      const list = base.filter(function(it){ return !isClosingItem(it); });
-
-      let insertAt = 3;
-      const receptionIndex = list.findIndex(function(it){
-        const text = textOf(it);
-        return text.indexOf('18:00') >= 0 || text.indexOf('cóctel') >= 0 || text.indexOf('cocktail') >= 0 || text.indexOf('recepción') >= 0 || text.indexOf('reception') >= 0;
-      });
-      if (receptionIndex >= 0) insertAt = receptionIndex + 1;
-
-      const firstTraditional = list.findIndex(isTraditionalItem);
-      if (firstTraditional >= 0 && insertAt > firstTraditional) insertAt = firstTraditional;
-
-      list.splice(insertAt, 0, Object.assign({}, FRIDAY_CLOSE));
-      return list;
-    }
-
-    function normalizeData(data){
-      const next = Object.assign({}, data || {});
-      next.itinerary = normalizeItinerary(next.itinerary || []);
-      return next;
-    }
-
     function timeFromIso(iso, fallback){
       const m = String(iso || '').match(/T(\d{2}:\d{2})/);
       return m ? m[1] : (fallback || '15:00');
@@ -67,36 +43,19 @@
     }
 
     function splitProgramDays(data){
-      const normalized = normalizeData(data || {});
-      const itinerary = normalized.itinerary || [];
-      let traditionalStart = itinerary.findIndex(isTraditionalItem);
-      if (traditionalStart < 0) traditionalStart = Math.min(4, itinerary.length);
+      const source = Array.isArray(data && data.itinerary) ? data.itinerary.map(function(it){ return Object.assign({}, it || {}); }) : [];
+      let traditionalStart = source.findIndex(isTraditionalItem);
+      if (traditionalStart < 0) traditionalStart = Math.min(4, source.length);
+
+      const friday = source.slice(0, traditionalStart);
+      const traditional = source.slice(traditionalStart);
+      if (!friday.some(isClosingItem)) friday.push(Object.assign({}, FALLBACK_FRIDAY_CLOSE));
+
       return {
-        icebreaker: buildIcebreakerItems(normalized),
-        friday: itinerary.slice(0, traditionalStart),
-        traditional: itinerary.slice(traditionalStart)
+        icebreaker: buildIcebreakerItems(data || {}),
+        friday: friday,
+        traditional: traditional
       };
-    }
-
-    try {
-      if (window.DEFAULT_DATA) {
-        window.DEFAULT_DATA = normalizeData(window.DEFAULT_DATA);
-        DEFAULT_DATA.itinerary = window.DEFAULT_DATA.itinerary;
-      }
-    } catch(e) {}
-
-    if (window.MockServer && !window.MockServer.__programDaysPatched) {
-      const originalGetContent = window.MockServer.getContent.bind(window.MockServer);
-      const originalSaveContent = window.MockServer.saveContent.bind(window.MockServer);
-      window.MockServer.getContent = async function(){
-        const result = await originalGetContent();
-        if (result && result.data) result.data = normalizeData(result.data);
-        return result;
-      };
-      window.MockServer.saveContent = async function(data){
-        return originalSaveContent(normalizeData(data));
-      };
-      window.MockServer.__programDaysPatched = true;
     }
 
     if (typeof React !== 'undefined' && typeof Reveal !== 'undefined' && typeof SectionHead !== 'undefined') {
@@ -130,7 +89,7 @@
       }
 
       function FixedItinerarySection(props){
-        const data = normalizeData(props.data || {});
+        const data = props.data || {};
         const L = props.L || {};
         const lang = props.lang || 'es';
         const days = splitProgramDays(data);
