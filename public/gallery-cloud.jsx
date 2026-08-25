@@ -1,4 +1,4 @@
-// gallery-cloud.jsx — Cloud upload override + icebreaker event patch + fixed dress swatches
+// gallery-cloud.jsx — safe gallery upload, icebreaker display, and admin live-sync
 
 const FIXED_DRESS_SWATCHES_DAY1 = [
   { c:"#ffbb7c", l:"Naranja Anteado" },
@@ -17,7 +17,9 @@ const FIXED_DRESS_SWATCHES_DAY2 = [
 ];
 
 (function addFixedDressCSS(){
+  if (document.getElementById("aa-fixed-dress-css")) return;
   const style = document.createElement("style");
+  style.id = "aa-fixed-dress-css";
   style.textContent = `
     #dress .dress-swatch-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;align-items:start;}
     #dress .dress-swatch-item{min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;}
@@ -26,6 +28,46 @@ const FIXED_DRESS_SWATCHES_DAY2 = [
     @media(max-width:720px){#dress .dress-color-dot{width:40px!important;height:40px!important;min-width:40px!important;max-width:40px!important;flex-basis:40px!important;}}
   `;
   document.head.appendChild(style);
+})();
+
+const ICEBREAKER_EVENT = {
+  title_es: "Rompe Hielo",
+  title_en: "Icebreaker",
+  iso: "2027-04-15T15:00:00-06:00",
+  date_es: "Jueves 15 de abril, 2027 · 15:00 h",
+  date_en: "Thursday, April 15th 2027 · 3:00 pm",
+  venue: "Mal de Amor",
+  address_es: "Santiago Matatlán, Oaxaca",
+  address_en: "Santiago Matatlán, Oaxaca",
+  map: "https://www.openstreetmap.org/export/embed.html?bbox=-96.4100,16.8400,-96.3800,16.8700&layer=mapnik&marker=16.8550,-96.3950",
+  note_es: "Tour por una mezcalera con costo por si gustan acompañarnos antes de iniciar la celebración.",
+  note_en: "Mezcal distillery tour with a cost, in case you would like to join us before the celebration begins."
+};
+
+function aaPublishContent(data){
+  try {
+    if (!data || typeof data !== "object") return;
+    window.__AA_SITE_DATA = data;
+    window.dispatchEvent(new CustomEvent("aa:content-updated", { detail:{ data } }));
+  } catch(e) {}
+}
+
+function withIcebreaker(data){
+  const saved = data || {};
+  return {
+    ...saved,
+    icebreaker: { ...ICEBREAKER_EVENT, ...(saved.icebreaker || {}) },
+  };
+}
+
+(function patchIcebreakerDefaultOnly(){
+  try {
+    if (window.DEFAULT_DATA) {
+      window.DEFAULT_DATA = withIcebreaker(window.DEFAULT_DATA);
+      DEFAULT_DATA.icebreaker = window.DEFAULT_DATA.icebreaker;
+    }
+    window.ICEBREAKER_EVENT = ICEBREAKER_EVENT;
+  } catch(e) {}
 })();
 
 if (typeof Reveal !== "undefined" && typeof SectionHead !== "undefined") {
@@ -78,43 +120,9 @@ if (typeof Reveal !== "undefined" && typeof SectionHead !== "undefined") {
   window.DressSection = FixedDressSection;
 }
 
-const ICEBREAKER_EVENT = {
-  title_es: "Rompe Hielo",
-  title_en: "Icebreaker",
-  iso: "2027-04-15T15:00:00-06:00",
-  date_es: "Jueves 15 de abril, 2027 · 15:00 h",
-  date_en: "Thursday, April 15th 2027 · 3:00 pm",
-  venue: "Mal de Amor",
-  address_es: "Santiago Matatlán, Oaxaca",
-  address_en: "Santiago Matatlán, Oaxaca",
-  map: "https://www.openstreetmap.org/export/embed.html?bbox=-96.4100,16.8400,-96.3800,16.8700&layer=mapnik&marker=16.8550,-96.3950",
-  note_es: "Tour por una mezcalera con costo de $750 MXN por persona, por si gustan acompañarnos antes de iniciar la celebración.",
-  note_en: "Mezcal distillery tour with a cost of $750 MXN per person, in case you would like to join us before the celebration begins."
-};
-
-(function patchIcebreakerData(){
-  if (window.DEFAULT_DATA) window.DEFAULT_DATA.icebreaker = window.DEFAULT_DATA.icebreaker || ICEBREAKER_EVENT;
-  if (window.MockServer && !window.MockServer.__icebreakerPatched) {
-    const originalGetContent = window.MockServer.getContent.bind(window.MockServer);
-    const originalSaveContent = window.MockServer.saveContent.bind(window.MockServer);
-    window.MockServer.getContent = async function(){
-      const result = await originalGetContent();
-      if (result && result.ok) {
-        const saved = result.data || {};
-        result.data = { ...window.DEFAULT_DATA, ...saved, icebreaker: saved.icebreaker || ICEBREAKER_EVENT, _tweaks: saved._tweaks || window.DEFAULT_DATA._tweaks };
-      }
-      return result;
-    };
-    window.MockServer.saveContent = async function(data){
-      return originalSaveContent({ ...window.DEFAULT_DATA, ...(data || {}), icebreaker: (data && data.icebreaker) || ICEBREAKER_EVENT });
-    };
-    window.MockServer.__icebreakerPatched = true;
-  }
-})();
-
 if (typeof EventCard !== "undefined") {
   function EventsSectionWithIcebreaker({ data, L, lang }) {
-    const current = { ...data, icebreaker: data.icebreaker || ICEBREAKER_EVENT };
+    const current = withIcebreaker(data || {});
     return (
       <section className="s" id="details">
         <WatercolorStamp size={400} style={{ position:"absolute", top:"10%", right:"-10%", opacity:.4, transform:"rotate(-15deg)" }} />
@@ -157,8 +165,13 @@ function CloudGalleryAdmin({ data, onChange, lang, L }) {
     reader.readAsDataURL(file);
   });
 
-  const save = async (next, text) => {
+  const updateLocal = (next) => {
     onChange(next);
+    aaPublishContent(next);
+  };
+
+  const save = async (next, text) => {
+    updateLocal(next);
     const r = await MockServer.saveContent(next);
     setMsg(r?.ok ? text : (lang === "es" ? "No se pudo confirmar el guardado." : "Save could not be confirmed."));
     setTimeout(() => setMsg(""), 3500);
@@ -167,7 +180,7 @@ function CloudGalleryAdmin({ data, onChange, lang, L }) {
   const update = (i, patch) => {
     const next = JSON.parse(JSON.stringify(data));
     next.gallery[i] = { ...next.gallery[i], ...patch };
-    onChange(next);
+    updateLocal(next);
   };
 
   const saveUpdate = async (i, patch, text) => {
@@ -224,10 +237,10 @@ function CloudGalleryAdmin({ data, onChange, lang, L }) {
         <div key={i} style={{ padding:12, border:"1px solid var(--line)", borderRadius:6, background:"#fff", display:"grid", gridTemplateColumns:"96px 1fr", gap:12 }}>
           <div style={{ width:96, height:96, overflow:"hidden", border:"1px solid var(--line)", display:"flex", alignItems:"center", justifyContent:"center", background:g.img ? "var(--paper-2)" : "var(--sage-wash)", color:"var(--ink-soft)", fontSize:9 }}>{g.img ? <img src={g.img} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }} /> : (lang === "es" ? "Sin foto" : "No photo")}</div>
           <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-            <div style={{ display:"flex", justifyContent:"space-between" }}><div className="micro" style={{ color:"var(--ink-mute)" }}>#{i+1}</div><div style={{ display:"flex", gap:4 }}><button onClick={()=>move(i,-1)} disabled={i===0}>↑</button><button onClick={()=>move(i,1)} disabled={i===data.gallery.length-1}>↓</button><button onClick={()=>{ if(confirm(lang === "es" ? "¿Eliminar esta foto?" : "Delete this photo?")) remove(i); }}>×</button></div></div>
-            <div className="row" style={{ gap:4 }}><label>{lang === "es" ? "Pie de foto" : "Caption"}</label><input value={g.ph || ""} onChange={e=>update(i, { ph:e.target.value })} onBlur={()=>MockServer.saveContent(data)} /></div>
+            <div style={{ display:"flex", justifyContent:"space-between" }}><div className="micro" style={{ color:"var(--ink-mute)" }}>#{i+1}</div><div style={{ display:"flex", gap:4 }}><button type="button" onClick={()=>move(i,-1)} disabled={i===0}>↑</button><button type="button" onClick={()=>move(i,1)} disabled={i===data.gallery.length-1}>↓</button><button type="button" onClick={()=>{ if(confirm(lang === "es" ? "¿Eliminar esta foto?" : "Delete this photo?")) remove(i); }}>×</button></div></div>
+            <div className="row" style={{ gap:4 }}><label>{lang === "es" ? "Pie de foto" : "Caption"}</label><input value={g.ph || ""} onChange={e=>update(i, { ph:e.target.value })} /></div>
             <div style={{ display:"flex", gap:6 }}><input ref={el => refs.current[i] = el} type="file" accept="image/*" style={{ display:"none" }} onChange={e=>upload(i, e.target.files?.[0])} /><button type="button" disabled={busy === i} onClick={()=>refs.current[i]?.click()} style={{ flex:1 }}>{busy === i ? (lang === "es" ? "Subiendo…" : "Uploading…") : g.img ? (lang === "es" ? "Cambiar" : "Replace") : (lang === "es" ? "Subir" : "Upload")}</button>{g.img && <button type="button" onClick={()=>saveUpdate(i, { img:"" })}>{lang === "es" ? "Quitar" : "Clear"}</button>}</div>
-            <div className="row" style={{ gap:4 }}><label style={{ fontSize:9 }}>{lang === "es" ? "…o URL de imagen" : "…or image URL"}</label><input type="url" placeholder="https://…" value={g.img && g.img.startsWith("data:") ? "" : (g.img || "")} onChange={e=>update(i, { img:e.target.value })} onBlur={()=>MockServer.saveContent(data)} /></div>
+            <div className="row" style={{ gap:4 }}><label style={{ fontSize:9 }}>{lang === "es" ? "…o URL de imagen" : "…or image URL"}</label><input type="url" placeholder="https://…" value={g.img && g.img.startsWith("data:") ? "" : (g.img || "")} onChange={e=>update(i, { img:e.target.value })} /></div>
           </div>
         </div>
       ))}
@@ -239,86 +252,55 @@ function CloudGalleryAdmin({ data, onChange, lang, L }) {
 try { GalleryAdmin = CloudGalleryAdmin; } catch(e) {}
 window.GalleryAdmin = CloudGalleryAdmin;
 
-if (typeof AdminPanel !== "undefined" && !window.__icebreakerAdminWrappedInline) {
-  const OriginalAdminPanel = AdminPanel;
-
-  function IcebreakerInlineEditor({ open, data, onChange, onSave, lang }) {
-    const [target, setTarget] = React.useState(null);
-    const [visible, setVisible] = React.useState(false);
-
-    React.useEffect(() => {
-      if (!open) { setVisible(false); setTarget(null); return; }
-      let container = null;
-      const sync = () => {
-        const panel = document.querySelector(".admin-panel.open");
-        const active = panel?.querySelector(".tabs button.on");
-        const body = panel?.querySelector(".body");
-        const txt = (active?.textContent || "").toLowerCase();
-        const isEvents = txt.includes("eventos") || txt.includes("events");
-        if (!body || !isEvents) {
-          setVisible(false);
-          return;
-        }
-        container = body.querySelector("[data-icebreaker-admin-inline]");
-        if (!container) {
-          container = document.createElement("div");
-          container.setAttribute("data-icebreaker-admin-inline", "true");
-          body.insertBefore(container, body.firstChild);
-        }
-        setTarget(container);
-        setVisible(true);
+(function adminLiveSync(){
+  function installMockSync(){
+    try {
+      if (!window.MockServer) return;
+      if (window.MockServer.__liveSyncSave === window.MockServer.saveContent) return;
+      const originalGet = window.MockServer.getContent.bind(window.MockServer);
+      const originalSave = window.MockServer.saveContent.bind(window.MockServer);
+      window.MockServer.getContent = async function(){
+        const result = await originalGet();
+        if (result && result.data) aaPublishContent(result.data);
+        return result;
       };
-      sync();
-      const id = setInterval(sync, 200);
-      return () => clearInterval(id);
-    }, [open]);
-
-    if (!open || !visible || !target) return null;
-
-    const ice = data.icebreaker || ICEBREAKER_EVENT;
-    const updateIce = (key, value) => {
-      const next = JSON.parse(JSON.stringify(data));
-      next.icebreaker = { ...(next.icebreaker || ICEBREAKER_EVENT), [key]: value };
-      onChange(next);
-    };
-
-    const Field = ({ label, k, rows }) => (
-      <div className="row">
-        <label>{label}</label>
-        {rows ? <textarea rows={rows} value={ice[k] || ""} onChange={e=>updateIce(k, e.target.value)} /> : <input value={ice[k] || ""} onChange={e=>updateIce(k, e.target.value)} />}
-      </div>
-    );
-
-    const block = (
-      <React.Fragment>
-        <div className="micro" style={{ color:"var(--sage-deep)", marginTop:4 }}>{lang==="es" ? "Rompe Hielo" : "Icebreaker"}</div>
-        <Field label={lang==="es" ? "Título (ES)" : "Title (ES)"} k="title_es" />
-        <Field label={lang==="es" ? "Título (EN)" : "Title (EN)"} k="title_en" />
-        <Field label={lang==="es" ? "Lugar" : "Venue"} k="venue" />
-        <Field label={lang==="es" ? "Dirección (ES)" : "Address (ES)"} k="address_es" />
-        <Field label={lang==="es" ? "Dirección (EN)" : "Address (EN)"} k="address_en" />
-        <Field label={lang==="es" ? "Fecha (ES)" : "Date (ES)"} k="date_es" />
-        <Field label={lang==="es" ? "Fecha (EN)" : "Date (EN)"} k="date_en" />
-        <Field label={lang==="es" ? "Fecha ISO" : "ISO Date"} k="iso" />
-        <Field label={lang==="es" ? "Mapa embed" : "Map embed"} k="map" />
-        <Field label={lang==="es" ? "Nota (ES)" : "Note (ES)"} k="note_es" rows={2} />
-        <Field label={lang==="es" ? "Nota (EN)" : "Note (EN)"} k="note_en" rows={2} />
-      </React.Fragment>
-    );
-
-    return ReactDOM.createPortal(block, target);
+      window.MockServer.saveContent = async function(data){
+        const payload = withIcebreaker(data || {});
+        const result = await originalSave(payload);
+        if (result && result.ok) aaPublishContent(payload);
+        return result;
+      };
+      window.MockServer.__liveSyncSave = window.MockServer.saveContent;
+    } catch(e) { console.error("[AdminLiveSync] MockServer patch failed", e); }
   }
 
-  function AdminPanelWithInlineIcebreaker(props) {
-    return (
-      <React.Fragment>
-        <OriginalAdminPanel {...props} />
-        <IcebreakerInlineEditor {...props} />
-      </React.Fragment>
-    );
+  function installAdminSync(){
+    try {
+      if (window.__AA_ADMIN_PANEL_LIVE_SYNC__ || typeof AdminPanel === "undefined") return;
+      const OriginalAdminPanel = AdminPanel;
+      function SyncedAdminPanel(props) {
+        const syncedOnChange = React.useCallback((next) => {
+          aaPublishContent(next);
+          props.onChange(next);
+        }, [props.onChange]);
+        const syncedOnSave = React.useCallback(async () => {
+          const result = await props.onSave?.();
+          try {
+            const fresh = await MockServer.getContent();
+            if (fresh && fresh.data) aaPublishContent(fresh.data);
+          } catch(e) {}
+          return result;
+        }, [props.onSave]);
+        return <OriginalAdminPanel {...props} onChange={syncedOnChange} onSave={syncedOnSave} />;
+      }
+      try { AdminPanel = SyncedAdminPanel; } catch(e) {}
+      window.AdminPanel = SyncedAdminPanel;
+      window.__AA_ADMIN_PANEL_LIVE_SYNC__ = true;
+    } catch(e) { console.error("[AdminLiveSync] AdminPanel wrap failed", e); }
   }
 
-  try { AdminPanel = AdminPanelWithInlineIcebreaker; } catch(e) {}
-  window.AdminPanel = AdminPanelWithInlineIcebreaker;
-  window.__icebreakerAdminWrappedInline = true;
-}
+  installAdminSync();
+  setTimeout(installMockSync, 100);
+  setTimeout(installMockSync, 800);
+  setTimeout(installMockSync, 2000);
+})();
