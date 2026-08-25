@@ -42,27 +42,32 @@
   observer.observe(document.documentElement, { childList:true, subtree:true });
   setTimeout(mount, 600);
   setTimeout(mount, 1600);
+  setTimeout(function(){ observer.disconnect(); }, 12000);
 })();
 
-// Load the safe admin editor after the site has had time to render.
-// This keeps the public platform visible even if the editor fails.
-(function loadSafeAdminEditor(){
+// Load only the current safe editor for Nuevas secciones.
+// Older admin-safe-panel.js versions must not be loaded because they used a separate save flow.
+(function loadSafeAdminEditorV6(){
   try {
-    if (window.__AA_SAFE_ADMIN_EDITOR_LOADER__) return;
-    window.__AA_SAFE_ADMIN_EDITOR_LOADER__ = true;
+    if (window.__AA_SAFE_ADMIN_EDITOR_LOADER_V6__) return;
+    window.__AA_SAFE_ADMIN_EDITOR_LOADER_V6__ = true;
     function load(){
       try {
-        if (document.querySelector('script[src="admin-safe-panel.js"]')) return;
+        if (window.__AA_ADMIN_SAFE_PANEL_V6__) return;
+        if (document.querySelector('script[data-aa-admin-safe-panel-v6]')) return;
+        document.querySelectorAll('.aa-safe-open-btn').forEach(function(btn){ btn.remove(); });
         var script = document.createElement('script');
-        script.src = 'admin-safe-panel.js?v=1';
+        script.src = 'admin-safe-panel-v6.js?v=6';
         script.async = true;
-        script.onerror = function(){ console.error('[AdminSafePanel] file could not be loaded'); };
+        script.defer = true;
+        script.setAttribute('data-aa-admin-safe-panel-v6','1');
+        script.onerror = function(){ console.error('[AdminSafePanelV6] file could not be loaded'); };
         document.body.appendChild(script);
       } catch(e) {
-        console.error('[AdminSafePanel] loader failed:', e);
+        console.error('[AdminSafePanelV6] loader failed:', e);
       }
     }
-    if (document.readyState === 'complete') setTimeout(load, 900);
-    else window.addEventListener('load', function(){ setTimeout(load, 900); });
+    if (document.readyState === 'complete') setTimeout(load, 600);
+    else window.addEventListener('load', function(){ setTimeout(load, 600); });
   } catch(e) {}
 })();
