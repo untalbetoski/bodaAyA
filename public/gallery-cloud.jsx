@@ -1,4 +1,4 @@
-// gallery-cloud.jsx — safe gallery upload, icebreaker display, and admin live-sync
+// gallery-cloud.jsx — safe gallery upload + icebreaker display without persistence wrapping
 
 const FIXED_DRESS_SWATCHES_DAY1 = [
   { c:"#ffbb7c", l:"Naranja Anteado" },
@@ -39,7 +39,7 @@ const ICEBREAKER_EVENT = {
   venue: "Mal de Amor",
   address_es: "Santiago Matatlán, Oaxaca",
   address_en: "Santiago Matatlán, Oaxaca",
-  map: "https://www.openstreetmap.org/export/embed.html?bbox=-96.4100,16.8400,-96.3800,16.8700&layer=mapnik&marker=16.8550,-96.3950",
+  map: "https://www.google.com/maps?q=Mal%20de%20Amor%2C%20Santiago%20Matatl%C3%A1n%2C%20Oaxaca&output=embed",
   note_es: "Tour por una mezcalera con costo por si gustan acompañarnos antes de iniciar la celebración.",
   note_en: "Mezcal distillery tour with a cost, in case you would like to join us before the celebration begins."
 };
@@ -251,56 +251,3 @@ function CloudGalleryAdmin({ data, onChange, lang, L }) {
 
 try { GalleryAdmin = CloudGalleryAdmin; } catch(e) {}
 window.GalleryAdmin = CloudGalleryAdmin;
-
-(function adminLiveSync(){
-  function installMockSync(){
-    try {
-      if (!window.MockServer) return;
-      if (window.MockServer.__liveSyncSave === window.MockServer.saveContent) return;
-      const originalGet = window.MockServer.getContent.bind(window.MockServer);
-      const originalSave = window.MockServer.saveContent.bind(window.MockServer);
-      window.MockServer.getContent = async function(){
-        const result = await originalGet();
-        if (result && result.data) aaPublishContent(result.data);
-        return result;
-      };
-      window.MockServer.saveContent = async function(data){
-        const payload = withIcebreaker(data || {});
-        const result = await originalSave(payload);
-        if (result && result.ok) aaPublishContent(payload);
-        return result;
-      };
-      window.MockServer.__liveSyncSave = window.MockServer.saveContent;
-    } catch(e) { console.error("[AdminLiveSync] MockServer patch failed", e); }
-  }
-
-  function installAdminSync(){
-    try {
-      if (window.__AA_ADMIN_PANEL_LIVE_SYNC__ || typeof AdminPanel === "undefined") return;
-      const OriginalAdminPanel = AdminPanel;
-      function SyncedAdminPanel(props) {
-        const syncedOnChange = React.useCallback((next) => {
-          aaPublishContent(next);
-          props.onChange(next);
-        }, [props.onChange]);
-        const syncedOnSave = React.useCallback(async () => {
-          const result = await props.onSave?.();
-          try {
-            const fresh = await MockServer.getContent();
-            if (fresh && fresh.data) aaPublishContent(fresh.data);
-          } catch(e) {}
-          return result;
-        }, [props.onSave]);
-        return <OriginalAdminPanel {...props} onChange={syncedOnChange} onSave={syncedOnSave} />;
-      }
-      try { AdminPanel = SyncedAdminPanel; } catch(e) {}
-      window.AdminPanel = SyncedAdminPanel;
-      window.__AA_ADMIN_PANEL_LIVE_SYNC__ = true;
-    } catch(e) { console.error("[AdminLiveSync] AdminPanel wrap failed", e); }
-  }
-
-  installAdminSync();
-  setTimeout(installMockSync, 100);
-  setTimeout(installMockSync, 800);
-  setTimeout(installMockSync, 2000);
-})();
