@@ -1,8 +1,8 @@
 // dress-code-gallery.js — admin-driven dress swatches and inspiration galleries
 (function dressCodeAdminDrivenGallery(){
   try {
-    if (window.__AA_DRESS_CODE_GALLERY_V2__) return;
-    window.__AA_DRESS_CODE_GALLERY_V2__ = true;
+    if (window.__AA_DRESS_CODE_GALLERY_V3__) return;
+    window.__AA_DRESS_CODE_GALLERY_V3__ = true;
 
     const DEFAULT_CONFIG = {
       colorsLabel_es:'Colores sugeridos',
@@ -57,6 +57,7 @@
     function normalizeDressAdmin(data){
       const next = merge(DEFAULT_CONFIG, (data && data.dressAdmin) || {});
       ['day1','day2'].forEach(function(day){
+        if (!next[day]) next[day] = clone(DEFAULT_CONFIG[day]);
         if (!Array.isArray(next[day].swatches) || !next[day].swatches.length) next[day].swatches = clone(DEFAULT_CONFIG[day].swatches);
         if (!Array.isArray(next[day].images) || !next[day].images.length) next[day].images = clone(DEFAULT_CONFIG[day].images);
       });
@@ -68,9 +69,11 @@
     }
 
     function addStyle(){
-      if (document.getElementById('aa-dress-code-gallery-style')) return;
+      if (document.getElementById('aa-dress-code-gallery-style-v3')) return;
+      const old = document.getElementById('aa-dress-code-gallery-style');
+      if (old) old.remove();
       const style = document.createElement('style');
-      style.id = 'aa-dress-code-gallery-style';
+      style.id = 'aa-dress-code-gallery-style-v3';
       style.textContent = `
         #dress .dress-swatch-grid{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:10px!important;align-items:start!important;}
         #dress .dress-swatch-item{min-width:0!important;display:flex!important;flex-direction:column!important;align-items:center!important;gap:6px!important;}
@@ -79,14 +82,11 @@
         #dress .aa-colores-sugeridos{margin-top:auto!important;padding-top:30px!important;margin-bottom:14px!important;text-align:center!important;font-family:var(--button-font,'Montserrat',sans-serif)!important;font-size:10px!important;letter-spacing:.22em!important;text-transform:uppercase!important;color:var(--leaf,var(--sage-deep,#111))!important;line-height:1.3!important;}
         #dress .aa-dress-gallery{margin-top:30px!important;padding-top:26px!important;border-top:1px solid var(--line,rgba(0,0,0,.16))!important;}
         #dress .aa-dress-gallery-title{font-family:var(--button-font,'Montserrat',sans-serif)!important;font-size:10px!important;letter-spacing:.22em!important;text-transform:uppercase!important;color:var(--leaf,var(--sage-deep,#111))!important;margin:0 0 14px!important;text-align:center!important;}
-        #dress .aa-dress-gallery-grid{display:grid!important;grid-template-columns:1.18fr .82fr!important;gap:10px!important;min-height:182px!important;}
-        #dress .aa-dress-gallery-main,#dress .aa-dress-gallery-side{position:relative!important;overflow:hidden!important;border:1px solid var(--line,rgba(0,0,0,.16))!important;background:rgba(255,250,241,.45)!important;}
-        #dress .aa-dress-gallery-main{min-height:182px!important;}
-        #dress .aa-dress-gallery-side-wrap{display:grid!important;grid-template-rows:1fr 1fr!important;gap:10px!important;min-height:182px!important;}
-        #dress .aa-dress-gallery-side{min-height:86px!important;}
-        #dress .aa-dress-gallery-tile{background-size:cover!important;background-position:center!important;}
+        #dress .aa-dress-gallery-grid{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(118px,1fr))!important;gap:10px!important;align-items:stretch!important;}
+        #dress .aa-dress-gallery-tile{position:relative!important;overflow:hidden!important;border:1px solid var(--line,rgba(0,0,0,.16))!important;background:rgba(255,250,241,.45)!important;background-size:cover!important;background-position:center!important;min-height:148px!important;}
+        #dress .aa-dress-gallery-tile:first-child{grid-column:span 2!important;min-height:190px!important;}
         #dress .aa-dress-gallery-tile::after{content:attr(data-label)!important;position:absolute!important;left:10px!important;bottom:9px!important;padding:5px 8px!important;background:rgba(250,246,238,.82)!important;border:1px solid rgba(0,0,0,.08)!important;backdrop-filter:blur(6px)!important;color:var(--citrus-deep,var(--ink,#111))!important;font-family:var(--button-font,'Montserrat',sans-serif)!important;font-size:8px!important;letter-spacing:.16em!important;text-transform:uppercase!important;line-height:1.2!important;}
-        @media(max-width:720px){#dress .dress-color-dot{width:40px!important;height:40px!important;min-width:40px!important;max-width:40px!important;flex-basis:40px!important;}#dress .aa-dress-gallery-grid{grid-template-columns:1fr!important;min-height:auto!important;}#dress .aa-dress-gallery-main{min-height:172px!important;}#dress .aa-dress-gallery-side-wrap{grid-template-columns:1fr 1fr!important;grid-template-rows:auto!important;min-height:92px!important;}#dress .aa-dress-gallery-side{min-height:92px!important;}}
+        @media(max-width:720px){#dress .dress-color-dot{width:40px!important;height:40px!important;min-width:40px!important;max-width:40px!important;flex-basis:40px!important;}#dress .aa-dress-gallery-grid{grid-template-columns:1fr 1fr!important;}#dress .aa-dress-gallery-tile,#dress .aa-dress-gallery-tile:first-child{grid-column:auto!important;min-height:118px!important;}}
       `;
       document.head.appendChild(style);
     }
@@ -99,9 +99,9 @@
       return 'linear-gradient(135deg,' + a + ',' + b + '),radial-gradient(circle at 72% 28%,' + c + ',transparent 34%)';
     }
 
-    function tile(item, cls, day){
+    function tile(item, day){
       const el = document.createElement('div');
-      el.className = cls + ' aa-dress-gallery-tile';
+      el.className = 'aa-dress-gallery-tile';
       el.setAttribute('data-label', (item && item.label) || 'Inspiración');
       if (item && item.img) el.style.backgroundImage = 'linear-gradient(0deg,rgba(0,0,0,.05),rgba(0,0,0,.05)),url("' + String(item.img).replace(/"/g, '%22') + '")';
       else el.style.backgroundImage = fallbackBackground(day);
@@ -110,19 +110,14 @@
 
     function buildGallery(day){
       const dayConfig = config[day] || DEFAULT_CONFIG[day];
-      const images = (dayConfig.images || []).slice(0, 3);
+      const images = Array.isArray(dayConfig.images) ? dayConfig.images.slice() : [];
       while (images.length < 3) images.push({ label:'Inspiración', img:'' });
       const wrap = document.createElement('div');
       wrap.className = 'aa-dress-gallery ' + day;
       wrap.setAttribute('data-aa-dress-gallery-key', galleryKey(day));
       wrap.innerHTML = '<div class="aa-dress-gallery-title">' + esc(dayConfig.title_es || 'Galería de inspiración') + '</div><div class="aa-dress-gallery-grid"></div>';
       const grid = wrap.querySelector('.aa-dress-gallery-grid');
-      grid.appendChild(tile(images[0], 'aa-dress-gallery-main', day));
-      const side = document.createElement('div');
-      side.className = 'aa-dress-gallery-side-wrap';
-      side.appendChild(tile(images[1], 'aa-dress-gallery-side', day));
-      side.appendChild(tile(images[2], 'aa-dress-gallery-side', day));
-      grid.appendChild(side);
+      images.forEach(function(item){ grid.appendChild(tile(item, day)); });
       return wrap;
     }
 
@@ -180,10 +175,9 @@
     async function loadConfig(){
       try {
         let data = window.__AA_SITE_DATA || window.DEFAULT_DATA || {};
-        if (window.MockServer && typeof window.MockServer.getContent === 'function') {
-          const r = await window.MockServer.getContent();
-          if (r && r.data) data = r.data;
-        }
+        const res = await fetch('/api/content?ts=' + Date.now(), { cache:'no-store' });
+        const json = await res.json().catch(function(){ return {}; });
+        if (res.ok && json.ok && json.data) data = json.data;
         config = normalizeDressAdmin(data);
       } catch(e) {
         config = normalizeDressAdmin(window.__AA_SITE_DATA || window.DEFAULT_DATA || {});
