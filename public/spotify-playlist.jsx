@@ -135,7 +135,7 @@
 (function loadDressColorsLabel(){
   try {
     const xhr = new XMLHttpRequest();
-    xhr.open('GET', 'dress-colors-label.js', false);
+    xhr.open('GET', 'dress-colors-label.js?v=6', false);
     xhr.send(null);
     if (xhr.status >= 200 && xhr.status < 300) {
       (0, eval)(xhr.responseText);
@@ -148,7 +148,7 @@
 (function loadDressCodeGallery(){
   try {
     const xhr = new XMLHttpRequest();
-    xhr.open('GET', 'dress-code-gallery.js', false);
+    xhr.open('GET', 'dress-code-gallery.js?v=4', false);
     xhr.send(null);
     if (xhr.status >= 200 && xhr.status < 300) {
       (0, eval)(xhr.responseText);
@@ -213,7 +213,7 @@
 (function loadAdminPanelRepair(){
   try {
     const xhr = new XMLHttpRequest();
-    xhr.open('GET', 'admin-panel-repair.js?v=2', false);
+    xhr.open('GET', 'admin-panel-repair.js?v=8', false);
     xhr.send(null);
     if (xhr.status >= 200 && xhr.status < 300) {
       (0, eval)(xhr.responseText);
