@@ -213,7 +213,7 @@
 (function loadAdminPanelRepair(){
   try {
     const xhr = new XMLHttpRequest();
-    xhr.open('GET', 'admin-panel-repair.js?v=8', false);
+    xhr.open('GET', 'admin-panel-repair.js?v=9', false);
     xhr.send(null);
     if (xhr.status >= 200 && xhr.status < 300) {
       (0, eval)(xhr.responseText);
