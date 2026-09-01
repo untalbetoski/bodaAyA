@@ -1,13 +1,13 @@
-// admin-panel-repair.js — lightweight admin UI safety + image persistence guard
+// admin-panel-repair.js — lightweight admin UI safety + persistent image save guard
 (function repairAdminPanel(){
   try {
-    if (window.__AA_ADMIN_PANEL_REPAIR_V9__) return;
-    window.__AA_ADMIN_PANEL_REPAIR_V9__ = true;
+    if (window.__AA_ADMIN_PANEL_REPAIR_V10__) return;
+    window.__AA_ADMIN_PANEL_REPAIR_V10__ = true;
 
     function addStyle(){
-      if (document.getElementById('aa-admin-panel-repair-style-v9')) return;
+      if (document.getElementById('aa-admin-panel-repair-style-v10')) return;
       var style = document.createElement('style');
-      style.id = 'aa-admin-panel-repair-style-v9';
+      style.id = 'aa-admin-panel-repair-style-v10';
       style.textContent = `
         .admin-fab,.admin-link,.admin-panel,.admin-panel *{pointer-events:auto!important;}
         .admin-panel{z-index:330!important;visibility:visible!important;}
@@ -23,10 +23,10 @@
       catch(e) { return Array.isArray(obj) ? obj.slice() : Object.assign({}, obj || {}); }
     }
 
-    function installDressImageSaveGuard(){
+    function installPersistentImageSaveGuard(){
       try {
-        if (window.__AA_DRESS_IMAGE_SAVE_GUARD_V1__) return;
-        window.__AA_DRESS_IMAGE_SAVE_GUARD_V1__ = true;
+        if (window.__AA_PERSISTENT_IMAGE_SAVE_GUARD_V10__) return;
+        window.__AA_PERSISTENT_IMAGE_SAVE_GUARD_V10__ = true;
 
         function hasImg(item){ return item && typeof item.img === 'string' && item.img.trim(); }
 
@@ -51,11 +51,8 @@
           return output;
         }
 
-        function protectDressAdminImages(incoming, existing){
-          if (!incoming || typeof incoming !== 'object') return incoming;
-          if (!existing || !existing.dressAdmin) return incoming;
-
-          var next = clone(incoming);
+        function protectDressAdminImages(next, existing){
+          if (!existing || !existing.dressAdmin) return next;
           next.dressAdmin = next.dressAdmin || clone(existing.dressAdmin);
 
           ['day1','day2'].forEach(function(day){
@@ -68,9 +65,39 @@
           return next;
         }
 
-        window.__AA_PROTECT_DRESS_ADMIN_IMAGES__ = protectDressAdminImages;
+        function protectEventVenueImages(next, existing){
+          var keys = ['icebreaker','ceremony','reception','traditional'];
+          keys.forEach(function(key){
+            var oldEv = existing && existing[key];
+            if (!oldEv || !String(oldEv.image || '').trim()) return;
+            next[key] = next[key] || {};
 
-        if (window.fetch && !window.fetch.__aaDressImageGuarded) {
+            // Preserve only when the incoming save does not know about the image field.
+            // If the admin explicitly sends image:'', we respect that as an intentional remove.
+            if (!Object.prototype.hasOwnProperty.call(next[key], 'image')) {
+              next[key].image = oldEv.image;
+            }
+            if (oldEv.image_caption_es && !Object.prototype.hasOwnProperty.call(next[key], 'image_caption_es')) next[key].image_caption_es = oldEv.image_caption_es;
+            if (oldEv.image_caption_en && !Object.prototype.hasOwnProperty.call(next[key], 'image_caption_en')) next[key].image_caption_en = oldEv.image_caption_en;
+            if (oldEv.image_alt_es && !Object.prototype.hasOwnProperty.call(next[key], 'image_alt_es')) next[key].image_alt_es = oldEv.image_alt_es;
+            if (oldEv.image_alt_en && !Object.prototype.hasOwnProperty.call(next[key], 'image_alt_en')) next[key].image_alt_en = oldEv.image_alt_en;
+          });
+          return next;
+        }
+
+        function protectPersistentImages(incoming, existing){
+          if (!incoming || typeof incoming !== 'object') return incoming;
+          if (!existing || typeof existing !== 'object') return incoming;
+          var next = clone(incoming);
+          next = protectDressAdminImages(next, existing);
+          next = protectEventVenueImages(next, existing);
+          return next;
+        }
+
+        window.__AA_PROTECT_DRESS_ADMIN_IMAGES__ = function(incoming, existing){ return protectDressAdminImages(clone(incoming), existing); };
+        window.__AA_PROTECT_PERSISTENT_IMAGES__ = protectPersistentImages;
+
+        if (window.fetch && !window.fetch.__aaPersistentImageGuardedV10) {
           var originalFetch = window.fetch.bind(window);
           var guardedFetch = async function(input, init){
             try {
@@ -88,8 +115,8 @@
                     if (res.ok && json.ok && json.data) existing = json.data;
                   } catch(loadErr) {}
 
-                  if (existing && existing.dressAdmin) {
-                    payload.data = protectDressAdminImages(payload.data, existing);
+                  if (existing) {
+                    payload.data = protectPersistentImages(payload.data, existing);
                     var nextInit = Object.assign({}, init, { body: JSON.stringify(payload) });
                     nextInit.headers = Object.assign({ 'Content-Type':'application/json' }, init.headers || {});
                     return originalFetch(input, nextInit);
@@ -97,16 +124,16 @@
                 }
               }
             } catch(err) {
-              console.error('[DressImageGuard] save protection skipped:', err);
+              console.error('[ImageSaveGuard] save protection skipped:', err);
             }
             return originalFetch(input, init);
           };
-          guardedFetch.__aaDressImageGuarded = true;
+          guardedFetch.__aaPersistentImageGuardedV10 = true;
           guardedFetch.__aaOriginalFetch = originalFetch;
           window.fetch = guardedFetch;
         }
       } catch(e) {
-        console.error('[DressImageGuard] disabled:', e);
+        console.error('[ImageSaveGuard] disabled:', e);
       }
     }
 
@@ -131,15 +158,15 @@
       try {
         var buttons = [document.querySelector('.admin-fab'), document.querySelector('.admin-link')];
         buttons.forEach(function(btn){
-          if (!btn || btn.getAttribute('data-aa-admin-repaired-v9')) return;
-          btn.setAttribute('data-aa-admin-repaired-v9','1');
+          if (!btn || btn.getAttribute('data-aa-admin-repaired-v10')) return;
+          btn.setAttribute('data-aa-admin-repaired-v10','1');
           btn.setAttribute('title','Abrir panel de administración');
         });
       } catch(e) {}
     }
 
     addStyle();
-    installDressImageSaveGuard();
+    installPersistentImageSaveGuard();
     var idle = window.requestIdleCallback || function(fn){ return setTimeout(fn, 700); };
     idle(loadSafeSectionsModal);
     setTimeout(loadSafeSectionsModal, 1200);
