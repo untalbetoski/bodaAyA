@@ -57,4 +57,26 @@ p,li,.meta,.field input,.field select,.field textarea{font-family:var(--body-fon
 .admin-panel{background:#fffaf1!important;border-left-color:rgba(95,75,52,.22)!important;}
 .admin-panel .tabs button.on{color:var(--ochre-deep)!important;border-bottom-color:var(--ochre)!important;}
 
+/* Ajuste de espaciado del código de vestimenta: elimina el hueco entre "A evitar" y colores sugeridos */
+#dress .aa-colores-sugeridos{
+  margin-top:18px!important;
+  padding-top:0!important;
+  margin-bottom:12px!important;
+}
+#dress .dress-swatch-grid{
+  margin-top:0!important;
+  padding-top:0!important;
+}
+#dress .aa-colores-sugeridos + .dress-swatch-grid{
+  margin-top:0!important;
+}
+#dress .aa-pinterest-group + div[style*="border: 1px dashed"],
+#dress .aa-pinterest-group + div[style*="border:1px dashed"]{
+  margin-top:18px!important;
+}
+#dress .aa-dress-gallery{
+  margin-top:24px!important;
+  padding-top:22px!important;
+}
+
 @media(max-width:720px){body::before{background-size:70px 116px,70px 116px,100% 100%,100% 100%!important;opacity:.24!important;}.hero-title{font-size:clamp(68px,20vw,112px)!important;}.section-title,h2{font-size:clamp(48px,15vw,76px)!important;}.micro,.kicker,.eyebrow{font-size:10px!important;letter-spacing:.18em!important;}}
