@@ -210,10 +210,23 @@
   }
 })();
 
+(function loadEventPlaceImages(){
+  try {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', 'event-place-images.js?v=1', false);
+    xhr.send(null);
+    if (xhr.status >= 200 && xhr.status < 300) {
+      (0, eval)(xhr.responseText);
+    }
+  } catch (e) {
+    console.error('[EventPlaceImages] loader failed:', e);
+  }
+})();
+
 (function loadAdminPanelRepair(){
   try {
     const xhr = new XMLHttpRequest();
-    xhr.open('GET', 'admin-panel-repair.js?v=9', false);
+    xhr.open('GET', 'admin-panel-repair.js?v=10', false);
     xhr.send(null);
     if (xhr.status >= 200 && xhr.status < 300) {
       (0, eval)(xhr.responseText);
