@@ -1,13 +1,13 @@
-// admin-panel-repair.js — lightweight admin UI safety + persistent image save guard
+// admin-panel-repair.js — lightweight admin UI safety + persistent media save guard
 (function repairAdminPanel(){
   try {
-    if (window.__AA_ADMIN_PANEL_REPAIR_V10__) return;
-    window.__AA_ADMIN_PANEL_REPAIR_V10__ = true;
+    if (window.__AA_ADMIN_PANEL_REPAIR_V11__) return;
+    window.__AA_ADMIN_PANEL_REPAIR_V11__ = true;
 
     function addStyle(){
-      if (document.getElementById('aa-admin-panel-repair-style-v10')) return;
+      if (document.getElementById('aa-admin-panel-repair-style-v11')) return;
       var style = document.createElement('style');
-      style.id = 'aa-admin-panel-repair-style-v10';
+      style.id = 'aa-admin-panel-repair-style-v11';
       style.textContent = `
         .admin-fab,.admin-link,.admin-panel,.admin-panel *{pointer-events:auto!important;}
         .admin-panel{z-index:330!important;visibility:visible!important;}
@@ -23,10 +23,17 @@
       catch(e) { return Array.isArray(obj) ? obj.slice() : Object.assign({}, obj || {}); }
     }
 
+    function inferMediaType(url, explicit){
+      explicit = String(explicit || '').toLowerCase();
+      if (explicit === 'video' || explicit === 'image') return explicit;
+      url = String(url || '').toLowerCase().split('?')[0].split('#')[0];
+      return /\.(mp4|webm|mov|m4v|ogv)$/.test(url) ? 'video' : 'image';
+    }
+
     function installPersistentImageSaveGuard(){
       try {
-        if (window.__AA_PERSISTENT_IMAGE_SAVE_GUARD_V10__) return;
-        window.__AA_PERSISTENT_IMAGE_SAVE_GUARD_V10__ = true;
+        if (window.__AA_PERSISTENT_MEDIA_SAVE_GUARD_V11__) return;
+        window.__AA_PERSISTENT_MEDIA_SAVE_GUARD_V11__ = true;
 
         function hasImg(item){ return item && typeof item.img === 'string' && item.img.trim(); }
 
@@ -65,17 +72,19 @@
           return next;
         }
 
-        function protectEventVenueImages(next, existing){
+        function protectEventVenueMedia(next, existing){
           var keys = ['icebreaker','ceremony','reception','traditional'];
           keys.forEach(function(key){
             var oldEv = existing && existing[key];
-            if (!oldEv || !String(oldEv.image || '').trim()) return;
+            var oldMedia = String((oldEv && (oldEv.image || oldEv.media || oldEv.video || oldEv.photo || oldEv.image_url)) || '').trim();
+            if (!oldEv || !oldMedia) return;
             next[key] = next[key] || {};
 
-            // Preserve only when the incoming save does not know about the image field.
-            // If the admin explicitly sends image:'', we respect that as an intentional remove.
-            if (!Object.prototype.hasOwnProperty.call(next[key], 'image')) {
-              next[key].image = oldEv.image;
+            var incomingHasMediaField = Object.prototype.hasOwnProperty.call(next[key], 'image') || Object.prototype.hasOwnProperty.call(next[key], 'media') || Object.prototype.hasOwnProperty.call(next[key], 'video');
+            if (!incomingHasMediaField) next[key].image = oldMedia;
+
+            if (!Object.prototype.hasOwnProperty.call(next[key], 'media_type')) {
+              next[key].media_type = oldEv.media_type || oldEv.image_type || inferMediaType(oldMedia, oldEv.media_type || oldEv.image_type);
             }
             if (oldEv.image_caption_es && !Object.prototype.hasOwnProperty.call(next[key], 'image_caption_es')) next[key].image_caption_es = oldEv.image_caption_es;
             if (oldEv.image_caption_en && !Object.prototype.hasOwnProperty.call(next[key], 'image_caption_en')) next[key].image_caption_en = oldEv.image_caption_en;
@@ -90,14 +99,14 @@
           if (!existing || typeof existing !== 'object') return incoming;
           var next = clone(incoming);
           next = protectDressAdminImages(next, existing);
-          next = protectEventVenueImages(next, existing);
+          next = protectEventVenueMedia(next, existing);
           return next;
         }
 
         window.__AA_PROTECT_DRESS_ADMIN_IMAGES__ = function(incoming, existing){ return protectDressAdminImages(clone(incoming), existing); };
         window.__AA_PROTECT_PERSISTENT_IMAGES__ = protectPersistentImages;
 
-        if (window.fetch && !window.fetch.__aaPersistentImageGuardedV10) {
+        if (window.fetch && !window.fetch.__aaPersistentMediaGuardedV11) {
           var originalFetch = window.fetch.bind(window);
           var guardedFetch = async function(input, init){
             try {
@@ -124,16 +133,16 @@
                 }
               }
             } catch(err) {
-              console.error('[ImageSaveGuard] save protection skipped:', err);
+              console.error('[MediaSaveGuard] save protection skipped:', err);
             }
             return originalFetch(input, init);
           };
-          guardedFetch.__aaPersistentImageGuardedV10 = true;
+          guardedFetch.__aaPersistentMediaGuardedV11 = true;
           guardedFetch.__aaOriginalFetch = originalFetch;
           window.fetch = guardedFetch;
         }
       } catch(e) {
-        console.error('[ImageSaveGuard] disabled:', e);
+        console.error('[MediaSaveGuard] disabled:', e);
       }
     }
 
@@ -158,8 +167,8 @@
       try {
         var buttons = [document.querySelector('.admin-fab'), document.querySelector('.admin-link')];
         buttons.forEach(function(btn){
-          if (!btn || btn.getAttribute('data-aa-admin-repaired-v10')) return;
-          btn.setAttribute('data-aa-admin-repaired-v10','1');
+          if (!btn || btn.getAttribute('data-aa-admin-repaired-v11')) return;
+          btn.setAttribute('data-aa-admin-repaired-v11','1');
           btn.setAttribute('title','Abrir panel de administración');
         });
       } catch(e) {}
