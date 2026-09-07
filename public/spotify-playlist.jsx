@@ -213,7 +213,7 @@
 (function loadEventPlaceImages(){
   try {
     const xhr = new XMLHttpRequest();
-    xhr.open('GET', 'event-place-images.js?v=1', false);
+    xhr.open('GET', 'event-place-images.js?v=2', false);
     xhr.send(null);
     if (xhr.status >= 200 && xhr.status < 300) {
       (0, eval)(xhr.responseText);
@@ -226,7 +226,7 @@
 (function loadAdminPanelRepair(){
   try {
     const xhr = new XMLHttpRequest();
-    xhr.open('GET', 'admin-panel-repair.js?v=10', false);
+    xhr.open('GET', 'admin-panel-repair.js?v=11', false);
     xhr.send(null);
     if (xhr.status >= 200 && xhr.status < 300) {
       (0, eval)(xhr.responseText);
