@@ -8,8 +8,8 @@ const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 app.use(cors());
-app.use(bodyParser.json({ limit: '15mb' }));
-app.use(bodyParser.urlencoded({ limit: '15mb', extended: true }));
+app.use(bodyParser.json({ limit: '35mb' }));
+app.use(bodyParser.urlencoded({ limit: '35mb', extended: true }));
 
 const PUBLIC_DIR = path.join(__dirname, '../public');
 const DATA_DIR = path.join(__dirname, '../data');
@@ -38,6 +38,28 @@ const cloudReady = () => Boolean(cloud);
 
 function sanitizeName(name = 'foto') {
   return String(name).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, '').toLowerCase().slice(0, 80) || 'foto';
+}
+
+function mediaExtension(mime, filename = '') {
+  const byMime = {
+    'image/jpeg':'jpg',
+    'image/jpg':'jpg',
+    'image/png':'png',
+    'image/webp':'webp',
+    'image/gif':'gif',
+    'video/mp4':'mp4',
+    'video/webm':'webm',
+    'video/quicktime':'mov',
+    'video/x-m4v':'m4v',
+    'video/ogg':'ogv'
+  };
+  if (byMime[mime]) return byMime[mime];
+  const match = sanitizeName(filename).match(/\.([a-z0-9]{2,5})$/i);
+  return match ? match[1].toLowerCase() : (String(mime).startsWith('video/') ? 'mp4' : 'jpg');
+}
+
+function mediaKind(mime) {
+  return String(mime || '').startsWith('video/') ? 'video' : 'image';
 }
 
 function absoluteSiteUrl(req, pathname = '/') {
@@ -187,8 +209,12 @@ function normalizeEventMaps(content) {
   EVENT_KEYS.forEach((key) => {
     if (!next[key]) return;
     const query = eventMapQuery(next[key], key);
+    const image = cleanText(next[key].image || next[key].media || next[key].video || next[key].photo || next[key].image_url || '');
+    const inferredType = image && /\.(mp4|webm|mov|m4v|ogv)(?:$|[?#])/i.test(image) ? 'video' : (next[key].media_type || next[key].image_type || '');
     next[key] = {
       ...next[key],
+      image: image || next[key].image,
+      media_type: next[key].media_type || inferredType,
       map: googleMapsEmbed(query),
       map_query: query,
       map_url: googleMapsPublic(query)
@@ -258,17 +284,27 @@ app.post('/api/gallery/upload', async (req, res) => {
   try {
     if (!cloudReady()) return res.status(500).json({ ok:false, error:'Cloud storage is not configured' });
     const { dataUrl, filename } = req.body || {};
-    if (!dataUrl || !String(dataUrl).startsWith('data:image/')) return res.status(400).json({ ok:false, error:'Invalid image data' });
-    const match = String(dataUrl).match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
+    const raw = String(dataUrl || '');
+    if (!raw || !/^data:(image|video)\//i.test(raw)) return res.status(400).json({ ok:false, error:'Invalid media data' });
+    const match = raw.match(/^data:((?:image|video)\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
     if (!match) return res.status(400).json({ ok:false, error:'Invalid data URL' });
-    const mime = match[1];
+    const mime = match[1].toLowerCase();
+    const allowed = /^(image\/(jpeg|jpg|png|webp|gif)|video\/(mp4|webm|quicktime|x-m4v|ogg))$/i.test(mime);
+    if (!allowed) return res.status(415).json({ ok:false, error:'Unsupported media type. Use JPG, PNG, WEBP, MP4, WEBM or MOV.' });
     const buffer = Buffer.from(match[2], 'base64');
-    const original = sanitizeName(filename || 'foto.jpg').replace(/\.[^.]+$/, '');
-    const objectPath = `gallery/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${original}.jpg`;
-    const { error } = await cloud.storage.from(GALLERY_BUCKET).upload(objectPath, buffer, { contentType:mime || 'image/jpeg', upsert:false });
+    if (buffer.length > 24 * 1024 * 1024) return res.status(413).json({ ok:false, error:'Media file is too large. Use a shorter or compressed video.' });
+    const clean = sanitizeName(filename || (mediaKind(mime) === 'video' ? 'video.mp4' : 'foto.jpg'));
+    const original = clean.replace(/\.[^.]+$/, '') || (mediaKind(mime) === 'video' ? 'video' : 'foto');
+    const ext = mediaExtension(mime, clean);
+    const objectPath = `gallery/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${original}.${ext}`;
+    const { error } = await cloud.storage.from(GALLERY_BUCKET).upload(objectPath, buffer, {
+      contentType:mime,
+      upsert:false,
+      cacheControl:'31536000'
+    });
     if (error) return res.status(500).json({ ok:false, error:error.message });
     const { data: publicData } = cloud.storage.from(GALLERY_BUCKET).getPublicUrl(objectPath);
-    return res.json({ ok:true, url:publicData.publicUrl, path:objectPath });
+    return res.json({ ok:true, url:publicData.publicUrl, path:objectPath, kind:mediaKind(mime), mime });
   } catch(e) { return res.status(500).json({ ok:false, error:e.message }); }
 });
 
