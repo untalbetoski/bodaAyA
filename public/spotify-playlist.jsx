@@ -210,19 +210,6 @@
   }
 })();
 
-(function loadEventPlaceImages(){
-  try {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', 'event-place-images.js?v=2', false);
-    xhr.send(null);
-    if (xhr.status >= 200 && xhr.status < 300) {
-      (0, eval)(xhr.responseText);
-    }
-  } catch (e) {
-    console.error('[EventPlaceImages] loader failed:', e);
-  }
-})();
-
 (function loadAdminPanelRepair(){
   try {
     const xhr = new XMLHttpRequest();
