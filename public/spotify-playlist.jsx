@@ -1,4 +1,4 @@
-// spotify-playlist.jsx — cloud persistence guard + Spotify collaborative playlist
+// spotify-playlist.jsx — cloud persistence guard + site patch loaders + Spotify collaborative playlist
 (function enforceCloudPersistence(){
   if (!window.MockServer || window.MockServer.__cloudPersistenceGuarded) return;
   const originalGetContent = window.MockServer.getContent.bind(window.MockServer);
@@ -7,9 +7,12 @@
 
   window.MockServer.getContent = async function(){
     try {
-      const res = await fetch('/api/content', { cache:'no-store' });
+      const res = await fetch('/api/content?ts=' + Date.now(), { cache:'no-store' });
       const json = await res.json().catch(() => ({}));
-      if (res.ok && json.ok && json.data) return { ok:true, data:json.data, source:json.source || 'cloud' };
+      if (res.ok && json.ok && json.data) {
+        try { window.__AA_SITE_DATA = json.data; } catch(e) {}
+        return { ok:true, data:json.data, source:json.source || 'cloud' };
+      }
       if (res.ok && json.ok && !json.data) return { ok:true, data:DEFAULT_DATA, source:json.source || 'cloud-empty' };
       throw new Error(json.error || 'Cloud content could not be loaded');
     } catch(e) {
@@ -28,7 +31,12 @@
       });
       const json = await res.json().catch(() => ({}));
       if (res.ok && json.ok && json.remoteSaved) {
-        return { ok:true, savedAt:json.savedAt, remoteSaved:true, source:json.source || 'cloud' };
+        const saved = json.data || data;
+        try {
+          window.__AA_SITE_DATA = saved;
+          window.dispatchEvent(new CustomEvent('aa:content-updated', { detail:{ data:saved } }));
+        } catch(e) {}
+        return { ok:true, savedAt:json.savedAt, remoteSaved:true, source:json.source || 'cloud', data:saved };
       }
       throw new Error(json.error || 'Cloud save was not confirmed');
     } catch(e) {
@@ -51,184 +59,44 @@
   } catch(e) {}
 })('minimal-editorial-theme.css');
 
-(function loadCloudBootstrap(){
+function aaLoadScriptSync(src, opts){
+  opts = opts || {};
   try {
     const xhr = new XMLHttpRequest();
-    xhr.open('GET', 'cloud-bootstrap.jsx', false);
+    xhr.open('GET', src, false);
     xhr.send(null);
     if (xhr.status >= 200 && xhr.status < 300) {
-      (0, eval)(xhr.responseText);
-    }
-  } catch (e) {
-    console.error('[CloudBootstrap] loader failed:', e);
-  }
-})();
-
-(function loadGoogleMapsPatch(){
-  try {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', 'google-maps.jsx', false);
-    xhr.send(null);
-    if (xhr.status >= 200 && xhr.status < 300) {
-      const compiled = window.Babel
+      const code = opts.react && window.Babel
         ? Babel.transform(xhr.responseText, { presets:['react'] }).code
         : xhr.responseText;
-      (0, eval)(compiled);
+      (0, eval)(code);
     }
   } catch (e) {
-    console.error('[GoogleMaps] loader failed:', e);
+    console.error('[' + (opts.name || src) + '] loader failed:', e);
   }
-})();
+}
 
-(function loadEventMapAutogenerator(){
-  try {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', 'event-map-autogenerator.js?v=1', false);
-    xhr.send(null);
-    if (xhr.status >= 200 && xhr.status < 300) {
-      (0, eval)(xhr.responseText);
-    }
-  } catch (e) {
-    console.error('[EventMapAutogenerator] loader failed:', e);
-  }
-})();
-
-(function loadNahonAccentPatch(){
-  try {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', 'nahon-patch.js', false);
-    xhr.send(null);
-    if (xhr.status >= 200 && xhr.status < 300) {
-      (0, eval)(xhr.responseText);
-    }
-  } catch (e) {
-    console.error('[Nahón] loader failed:', e);
-  }
-})();
-
-(function loadHeroMonogram(){
-  try {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', 'monogram-site.js', false);
-    xhr.send(null);
-    if (xhr.status >= 200 && xhr.status < 300) {
-      (0, eval)(xhr.responseText);
-    }
-  } catch (e) {
-    console.error('[Monogram] loader failed:', e);
-  }
-})();
-
-(function loadPinterestDressCode(){
-  try {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', 'pinterest-dresscode.js', false);
-    xhr.send(null);
-    if (xhr.status >= 200 && xhr.status < 300) {
-      (0, eval)(xhr.responseText);
-    }
-  } catch (e) {
-    console.error('[Pinterest] loader failed:', e);
-  }
-})();
-
-(function loadDressColorsLabel(){
-  try {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', 'dress-colors-label.js?v=6', false);
-    xhr.send(null);
-    if (xhr.status >= 200 && xhr.status < 300) {
-      (0, eval)(xhr.responseText);
-    }
-  } catch (e) {
-    console.error('[DressColorsLabel] loader failed:', e);
-  }
-})();
-
-(function loadDressCodeGallery(){
-  try {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', 'dress-code-gallery.js?v=4', false);
-    xhr.send(null);
-    if (xhr.status >= 200 && xhr.status < 300) {
-      (0, eval)(xhr.responseText);
-    }
-  } catch (e) {
-    console.error('[DressCodeGallery] loader failed:', e);
-  }
-})();
-
-(function loadMinimalTheme(){
-  try {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', 'minimal-theme.js', false);
-    xhr.send(null);
-    if (xhr.status >= 200 && xhr.status < 300) {
-      (0, eval)(xhr.responseText);
-    }
-  } catch (e) {
-    console.error('[MinimalTheme] loader failed:', e);
-  }
-})();
-
-(function loadScriptFontForce(){
-  try {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', 'script-font-force.js', false);
-    xhr.send(null);
-    if (xhr.status >= 200 && xhr.status < 300) {
-      (0, eval)(xhr.responseText);
-    }
-  } catch (e) {
-    console.error('[ScriptFontForce] loader failed:', e);
-  }
-})();
-
-(function loadWelcomeAfterCountdown(){
-  try {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', 'welcome-after-countdown.js', false);
-    xhr.send(null);
-    if (xhr.status >= 200 && xhr.status < 300) {
-      (0, eval)(xhr.responseText);
-    }
-  } catch (e) {
-    console.error('[WelcomeAfterCountdown] loader failed:', e);
-  }
-})();
-
-(function loadFridayProgramClose(){
-  try {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', 'friday-program-close.js', false);
-    xhr.send(null);
-    if (xhr.status >= 200 && xhr.status < 300) {
-      (0, eval)(xhr.responseText);
-    }
-  } catch (e) {
-    console.error('[FridayProgramClose] loader failed:', e);
-  }
-})();
-
-(function loadAdminPanelRepair(){
-  try {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', 'admin-panel-repair.js?v=11', false);
-    xhr.send(null);
-    if (xhr.status >= 200 && xhr.status < 300) {
-      (0, eval)(xhr.responseText);
-    }
-  } catch (e) {
-    console.error('[AdminPanelRepair] loader failed:', e);
-  }
-})();
+aaLoadScriptSync('cloud-bootstrap.jsx?v=1', { name:'CloudBootstrap' });
+aaLoadScriptSync('google-maps.jsx?v=1', { name:'GoogleMaps', react:true });
+aaLoadScriptSync('event-map-autogenerator.js?v=1', { name:'EventMapAutogenerator' });
+aaLoadScriptSync('nahon-patch.js?v=1', { name:'Nahón' });
+aaLoadScriptSync('monogram-site.js?v=1', { name:'Monogram' });
+aaLoadScriptSync('pinterest-dresscode.js?v=1', { name:'Pinterest' });
+aaLoadScriptSync('dress-colors-label.js?v=6', { name:'DressColorsLabel' });
+aaLoadScriptSync('dress-code-gallery.js?v=4', { name:'DressCodeGallery' });
+aaLoadScriptSync('minimal-theme.js?v=1', { name:'MinimalTheme' });
+aaLoadScriptSync('script-font-force.js?v=1', { name:'ScriptFontForce' });
+aaLoadScriptSync('welcome-after-countdown.js?v=1', { name:'WelcomeAfterCountdown' });
+aaLoadScriptSync('friday-program-close.js?v=1', { name:'FridayProgramClose' });
+aaLoadScriptSync('event-place-images.js?v=5', { name:'StableEventMedia' });
+aaLoadScriptSync('admin-panel-repair.js?v=11', { name:'AdminPanelRepair' });
 
 (function loadCitrusInspirationTheme(){
   try {
     if (document.querySelector('link[href="citrus-inspiration-theme.css"]')) return;
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = 'citrus-inspiration-theme.css';
+    link.href = 'citrus-inspiration-theme.css?v=1';
     document.head.appendChild(link);
   } catch (e) {
     console.error('[CitrusTheme] loader failed:', e);
