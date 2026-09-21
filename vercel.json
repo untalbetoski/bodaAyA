@@ -19,7 +19,7 @@
     },
     {
       "src": "^/api/media/upload$",
-      "dest": "/api/media-upload.js"
+      "dest": "/api/media-upload-gallery.js"
     },
     {
       "src": "^/api/(.*)$",
