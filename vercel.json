@@ -18,6 +18,10 @@
       "dest": "/api/landing.js"
     },
     {
+      "src": "^/api/media/upload$",
+      "dest": "/api/media-upload.js"
+    },
+    {
       "src": "^/api/(.*)$",
       "dest": "/api/index.js"
     },
