@@ -17,6 +17,20 @@ const PALETTES = {
   midnight:{ paper:"#f1f2f5", paper2:"#dde0e6", deep:"#3c4860", main:"#6c7a98", light:"#a8b4c8", wash:"#c8d0e0" },
 };
 
+function paletteFromTweak(palette){
+  const [paper, deep, light] = palette || [];
+  const found = Object.values(PALETTES).find(p => p.paper === paper && p.deep === deep);
+  if (found) return found;
+  return {
+    paper: paper || PALETTES.sage.paper,
+    paper2: PALETTES.sage.paper2,
+    deep: deep || PALETTES.sage.deep,
+    main: deep || PALETTES.sage.main,
+    light: light || PALETTES.sage.light,
+    wash: light || PALETTES.sage.wash,
+  };
+}
+
 function applyPalette(p){
   const r = document.documentElement.style;
   r.setProperty("--paper", p.paper);
@@ -43,6 +57,13 @@ function applyFontPair(pair) {
     r.setProperty("--script", '"Pinyon Script", cursive');
     r.setProperty("--serif", '"Cormorant Garamond", serif');
   }
+}
+
+function applyDesignTweaks(tweaks = {}) {
+  const merged = { ...TWEAK_DEFAULTS, ...(tweaks || {}) };
+  applyPalette(paletteFromTweak(merged.palette));
+  applyFontPair(merged.fontPair);
+  document.body.setAttribute("data-mode", merged.mode || "classic");
 }
 
 (function(){
@@ -127,25 +148,33 @@ function App() {
     },
   }), [data, t]);
 
-  const setTweak = useCallbackApp((key, value) => {
-    rawSetTweak(key, value);
+  const setTweak = useCallbackApp((keyOrEdits, value) => {
+    const edits = typeof keyOrEdits === "object" && keyOrEdits !== null ? keyOrEdits : { [keyOrEdits]: value };
+    rawSetTweak(edits);
+
+    setData(prev => {
+      const nextTweaks = { ...TWEAK_DEFAULTS, ...(prev?._tweaks || {}), ...(t || {}), ...edits };
+      applyDesignTweaks(nextTweaks);
+      return { ...prev, _tweaks: nextTweaks };
+    });
+
     setDirty(true);
     setSaveState("unsaved");
-  }, [rawSetTweak]);
+  }, [rawSetTweak, t]);
 
   useEffectApp(() => {
     let alive = true;
     MockServer.getContent().then(r => {
       if (!alive) return;
       const remoteData = (r.ok && r.data) ? r.data : DEFAULT_DATA;
-      setData(remoteData);
+      const mergedTweaks = { ...TWEAK_DEFAULTS, ...(remoteData?._tweaks || {}) };
+      const hydratedData = { ...remoteData, _tweaks: mergedTweaks };
 
-      if (remoteData?._tweaks) {
-        const mergedTweaks = { ...TWEAK_DEFAULTS, ...remoteData._tweaks };
-        Object.entries(mergedTweaks).forEach(([key, value]) => rawSetTweak(key, value));
-      }
+      setData(hydratedData);
+      rawSetTweak(mergedTweaks);
+      applyDesignTweaks(mergedTweaks);
 
-      lastSavedJson.current = JSON.stringify(buildPayload(remoteData, remoteData?._tweaks || t));
+      lastSavedJson.current = JSON.stringify(buildPayload(hydratedData, mergedTweaks));
       setSaveState("saved");
       setDirty(false);
       setLoaded(true);
@@ -156,25 +185,21 @@ function App() {
   }, []);
 
   useEffectApp(() => {
-    const [paper, deep] = t.palette || [];
-    let key = "sage";
-    Object.entries(PALETTES).forEach(([k,v]) => {
-      if (v.paper === paper && v.deep === deep) key = k;
-    });
-    applyPalette(PALETTES[key]);
+    applyPalette(paletteFromTweak(t.palette));
   }, [t.palette]);
 
   useEffectApp(() => { applyFontPair(t.fontPair); }, [t.fontPair]);
 
   useEffectApp(() => {
-    document.body.setAttribute("data-mode", t.mode);
+    document.body.setAttribute("data-mode", t.mode || "classic");
   }, [t.mode]);
 
   const updateData = useCallbackApp((next) => {
-    setData(next);
+    const withTweaks = { ...next, _tweaks: { ...TWEAK_DEFAULTS, ...(data?._tweaks || {}), ...(t || {}), ...(next?._tweaks || {}) } };
+    setData(withTweaks);
     setDirty(true);
     setSaveState("unsaved");
-  }, []);
+  }, [data, t]);
 
   const saveNow = useCallbackApp(async (content = data, tweaks = t) => {
     const payload = buildPayload(content, tweaks);
@@ -198,21 +223,21 @@ function App() {
   }, [data, t, buildPayload]);
 
   const onSave = useCallbackApp(async () => {
-    await saveNow(data, t);
+    await saveNow(data, data?._tweaks || t);
   }, [saveNow, data, t]);
 
   useEffectApp(() => {
     if (!loaded || !dirty) return;
     clearTimeout(autosaveTimer.current);
     autosaveTimer.current = setTimeout(() => {
-      saveNow(data, t);
+      saveNow(data, data?._tweaks || t);
     }, 900);
     return () => clearTimeout(autosaveTimer.current);
   }, [loaded, dirty, data, t, saveNow]);
 
   useEffectApp(() => {
     const beforeUnload = () => {
-      if (dirty) saveNow(data, t);
+      if (dirty) saveNow(data, data?._tweaks || t);
     };
     window.addEventListener("beforeunload", beforeUnload);
     return () => window.removeEventListener("beforeunload", beforeUnload);
@@ -289,7 +314,7 @@ function App() {
         saveState={saveState}
         lang={lang}
         L={L}
-        tweaks={t}
+        tweaks={data?._tweaks || t}
         setTweak={setTweak}
         palettes={PALETTES}
       />
