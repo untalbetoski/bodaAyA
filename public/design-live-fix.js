@@ -1,8 +1,8 @@
-// design-live-fix.js — makes admin Design controls apply immediately and persist
+// design-live-fix.js — force pastel design controls to apply and persist
 (function designLiveFix(){
   try {
-    if (window.__AA_DESIGN_LIVE_FIX_V1__) return;
-    window.__AA_DESIGN_LIVE_FIX_V1__ = true;
+    if (window.__AA_DESIGN_LIVE_FIX_V2__) return;
+    window.__AA_DESIGN_LIVE_FIX_V2__ = true;
 
     const PASTEL = {
       sage: {
@@ -35,7 +35,13 @@
       showFAB: true
     };
 
-    function setVar(name, value){ document.documentElement.style.setProperty(name, value); }
+    function setVar(name, value){
+      document.documentElement.style.setProperty(name, value, 'important');
+    }
+
+    function setBodyMode(mode){
+      document.body.setAttribute('data-mode', mode === 'editorial' ? 'editorial' : 'classic');
+    }
 
     function applyPaletteKey(key){
       const p = PASTEL[key] || PASTEL.sage;
@@ -51,8 +57,7 @@
     }
 
     function keyFromPalette(palette){
-      const arr = Array.isArray(palette) ? palette : [];
-      const joined = arr.join('|').toLowerCase();
+      const joined = (Array.isArray(palette) ? palette : []).join('|').toLowerCase();
       if (joined.includes('#b8848d') || joined.includes('#8c5a5e') || joined.includes('#c08a8e')) return 'rose';
       if (joined.includes('#a99676')) return 'bone';
       if (joined.includes('#7f8fb3') || joined.includes('#3c4860') || joined.includes('#6c7a98')) return 'midnight';
@@ -63,30 +68,36 @@
     function applyFontPair(pair){
       const r = document.documentElement.style;
       if (pair === 'cormorant-italianno') {
-        r.setProperty('--display', '"Cormorant Garamond", serif');
-        r.setProperty('--script', '"Italianno", cursive');
-        r.setProperty('--serif', '"Cormorant Garamond", serif');
+        r.setProperty('--display', '"Cormorant Garamond", serif', 'important');
+        r.setProperty('--script', '"Italianno", cursive', 'important');
+        r.setProperty('--serif', '"Cormorant Garamond", serif', 'important');
       } else if (pair === 'inter-script') {
-        r.setProperty('--display', '"Inter", sans-serif');
-        r.setProperty('--script', '"Pinyon Script", cursive');
-        r.setProperty('--serif', '"Cormorant Garamond", serif');
+        r.setProperty('--display', '"Inter", sans-serif', 'important');
+        r.setProperty('--script', '"Pinyon Script", cursive', 'important');
+        r.setProperty('--serif', '"Cormorant Garamond", serif', 'important');
       } else {
-        r.setProperty('--display', '"Italiana", serif');
-        r.setProperty('--script', '"Pinyon Script", cursive');
-        r.setProperty('--serif', '"Cormorant Garamond", serif');
+        r.setProperty('--display', '"Italiana", serif', 'important');
+        r.setProperty('--script', '"Pinyon Script", cursive', 'important');
+        r.setProperty('--serif', '"Cormorant Garamond", serif', 'important');
       }
-    }
-
-    function applyMode(mode){
-      document.body.setAttribute('data-mode', mode === 'editorial' ? 'editorial' : 'classic');
     }
 
     function applyTweaks(tweaks){
       const merged = Object.assign({}, DEFAULT_TWEAKS, tweaks || {});
-      applyPaletteKey(keyFromPalette(merged.palette));
+      const key = keyFromPalette(merged.palette);
+      merged.palette = applyPaletteKey(key);
       applyFontPair(merged.fontPair);
-      applyMode(merged.mode);
+      setBodyMode(merged.mode);
+      window.__AA_LAST_DESIGN_TWEAKS__ = merged;
       return merged;
+    }
+
+    function cleanText(el){
+      return String(el && el.textContent || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+    }
+
+    function paletteKeyFromText(text){
+      return Object.keys(PASTEL).find(key => PASTEL[key].match.some(word => text.includes(word))) || '';
     }
 
     async function fetchContent(){
@@ -112,27 +123,14 @@
         } catch(err) {
           console.error('[DesignLiveFix] save failed:', err);
         }
-      }, 350);
+      }, 250);
     }
 
-    function cleanText(el){ return String(el && el.textContent || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim(); }
-
-    function paletteKeyFromText(text){
-      return Object.keys(PASTEL).find(key => PASTEL[key].match.some(word => text.includes(word))) || '';
-    }
-
-    document.addEventListener('click', function(ev){
-      const panel = ev.target.closest && ev.target.closest('.admin-panel');
-      if (!panel) return;
-      const btn = ev.target.closest('button');
-      if (!btn) return;
+    function applyFromButton(btn){
       const text = cleanText(btn);
       const edits = {};
-
       const paletteKey = paletteKeyFromText(text);
-      if (paletteKey) {
-        edits.palette = applyPaletteKey(paletteKey);
-      }
+      if (paletteKey) edits.palette = applyPaletteKey(paletteKey);
 
       if (text.includes('cormorant')) {
         edits.fontPair = 'cormorant-italianno';
@@ -147,13 +145,35 @@
 
       if (text.includes('editorial')) {
         edits.mode = 'editorial';
-        applyMode('editorial');
+        setBodyMode('editorial');
       } else if (text.includes('clasica') || text.includes('classic')) {
         edits.mode = 'classic';
-        applyMode('classic');
+        setBodyMode('classic');
       }
 
-      if (Object.keys(edits).length) saveTweaks(edits);
+      if (Object.keys(edits).length) {
+        window.__AA_LAST_DESIGN_TWEAKS__ = Object.assign({}, window.__AA_LAST_DESIGN_TWEAKS__ || DEFAULT_TWEAKS, edits);
+        saveTweaks(edits);
+        setTimeout(() => applyTweaks(window.__AA_LAST_DESIGN_TWEAKS__), 80);
+        setTimeout(() => applyTweaks(window.__AA_LAST_DESIGN_TWEAKS__), 350);
+      }
+    }
+
+    function paintDesignButtons(){
+      document.querySelectorAll('.admin-panel button').forEach(btn => {
+        const key = paletteKeyFromText(cleanText(btn));
+        if (!key || btn.dataset.aaPastelReady) return;
+        btn.dataset.aaPastelReady = '1';
+        const p = PASTEL[key].vars;
+        btn.style.setProperty('background', `linear-gradient(135deg, ${p.paper} 0%, ${p.light} 58%, ${p.main} 100%)`, 'important');
+        btn.style.setProperty('border-color', p.deep, 'important');
+      });
+    }
+
+    document.addEventListener('click', function(ev){
+      const btn = ev.target.closest && ev.target.closest('.admin-panel button');
+      if (!btn) return;
+      applyFromButton(btn);
     }, true);
 
     document.addEventListener('input', function(ev){
@@ -161,13 +181,26 @@
       if (!panel || ev.target.type !== 'range') return;
       const value = parseInt(ev.target.value, 10);
       if (!Number.isFinite(value)) return;
-      saveTweaks({ watercolorIntensity: value });
+      const edits = { watercolorIntensity: value };
+      window.__AA_LAST_DESIGN_TWEAKS__ = Object.assign({}, window.__AA_LAST_DESIGN_TWEAKS__ || DEFAULT_TWEAKS, edits);
+      saveTweaks(edits);
     }, true);
+
+    const mo = new MutationObserver(() => paintDesignButtons());
+    mo.observe(document.documentElement, { childList:true, subtree:true });
+
+    // Force visible pastel as soon as this file loads, before any saved data arrives.
+    applyTweaks(DEFAULT_TWEAKS);
+    setTimeout(() => applyTweaks(window.__AA_LAST_DESIGN_TWEAKS__ || DEFAULT_TWEAKS), 100);
+    setTimeout(() => applyTweaks(window.__AA_LAST_DESIGN_TWEAKS__ || DEFAULT_TWEAKS), 500);
+    setInterval(() => applyTweaks(window.__AA_LAST_DESIGN_TWEAKS__ || DEFAULT_TWEAKS), 2500);
 
     fetchContent().then(data => {
       const tweaks = data && data._tweaks ? data._tweaks : DEFAULT_TWEAKS;
-      applyTweaks(tweaks);
-    }).catch(() => applyTweaks(DEFAULT_TWEAKS));
+      window.__AA_LAST_DESIGN_TWEAKS__ = applyTweaks(tweaks);
+    }).catch(() => {
+      window.__AA_LAST_DESIGN_TWEAKS__ = applyTweaks(DEFAULT_TWEAKS);
+    });
 
     window.AAApplyDesignTweaks = applyTweaks;
   } catch(err) {
