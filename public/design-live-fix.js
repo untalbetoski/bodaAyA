@@ -1,29 +1,39 @@
 // design-live-fix.js — force pastel design controls to apply and persist
 (function designLiveFix(){
   try {
-    if (window.__AA_DESIGN_LIVE_FIX_V2__) return;
-    window.__AA_DESIGN_LIVE_FIX_V2__ = true;
+    if (window.__AA_DESIGN_LIVE_FIX_V3__) return;
+    window.__AA_DESIGN_LIVE_FIX_V3__ = true;
 
     const PASTEL = {
       sage: {
+        label_es: 'Salvia pastel', label_en: 'Pastel sage',
         match: ['salvia', 'sage'],
         tweak: ['#fbf7f0', '#8fa58a', '#ddebd6'],
         vars: { paper:'#fbf7f0', paper2:'#f1eadf', deep:'#8fa58a', main:'#b8cdb1', light:'#ddebd6', wash:'#eef6ec' }
       },
       rose: {
+        label_es: 'Rosa pastel', label_en: 'Pastel rose',
         match: ['rosa', 'rose', 'dusty'],
         tweak: ['#fff6f7', '#b8848d', '#f4d9df'],
         vars: { paper:'#fff6f7', paper2:'#f6e7ea', deep:'#b8848d', main:'#e7b7c1', light:'#f4d9df', wash:'#fbedf0' }
       },
       bone: {
+        label_es: 'Marfil cálido', label_en: 'Warm ivory',
         match: ['hueso', 'bone', 'marfil'],
         tweak: ['#fffaf1', '#a99676', '#f3e6cc'],
         vars: { paper:'#fffaf1', paper2:'#f4ead6', deep:'#a99676', main:'#e3cfad', light:'#f3e6cc', wash:'#fff3dc' }
       },
       midnight: {
+        label_es: 'Azul lavanda', label_en: 'Lavender blue',
         match: ['medianoche', 'midnight', 'azul', 'lavanda'],
         tweak: ['#f6f8ff', '#7f8fb3', '#dce3f7'],
         vars: { paper:'#f6f8ff', paper2:'#e9edf8', deep:'#7f8fb3', main:'#b9c5e7', light:'#dce3f7', wash:'#eef2ff' }
+      },
+      lilac: {
+        label_es: 'Lila pastel', label_en: 'Pastel lilac',
+        match: ['lila', 'lilac', 'morado', 'lavender purple'],
+        tweak: ['#fbf7ff', '#9b82bd', '#e8dcf7'],
+        vars: { paper:'#fbf7ff', paper2:'#f0e8f8', deep:'#9b82bd', main:'#cdb9e8', light:'#e8dcf7', wash:'#f5effc' }
       }
     };
 
@@ -35,13 +45,8 @@
       showFAB: true
     };
 
-    function setVar(name, value){
-      document.documentElement.style.setProperty(name, value, 'important');
-    }
-
-    function setBodyMode(mode){
-      document.body.setAttribute('data-mode', mode === 'editorial' ? 'editorial' : 'classic');
-    }
+    function setVar(name, value){ document.documentElement.style.setProperty(name, value, 'important'); }
+    function setBodyMode(mode){ document.body.setAttribute('data-mode', mode === 'editorial' ? 'editorial' : 'classic'); }
 
     function applyPaletteKey(key){
       const p = PASTEL[key] || PASTEL.sage;
@@ -58,6 +63,7 @@
 
     function keyFromPalette(palette){
       const joined = (Array.isArray(palette) ? palette : []).join('|').toLowerCase();
+      if (joined.includes('#9b82bd') || joined.includes('#cdb9e8') || joined.includes('#e8dcf7')) return 'lilac';
       if (joined.includes('#b8848d') || joined.includes('#8c5a5e') || joined.includes('#c08a8e')) return 'rose';
       if (joined.includes('#a99676')) return 'bone';
       if (joined.includes('#7f8fb3') || joined.includes('#3c4860') || joined.includes('#6c7a98')) return 'midnight';
@@ -120,36 +126,22 @@
             headers:{ 'Content-Type':'application/json' },
             body: JSON.stringify({ data: payload })
           });
-        } catch(err) {
-          console.error('[DesignLiveFix] save failed:', err);
-        }
+        } catch(err) { console.error('[DesignLiveFix] save failed:', err); }
       }, 250);
     }
 
     function applyFromButton(btn){
       const text = cleanText(btn);
       const edits = {};
-      const paletteKey = paletteKeyFromText(text);
+      const paletteKey = btn.dataset.aaPaletteKey || paletteKeyFromText(text);
       if (paletteKey) edits.palette = applyPaletteKey(paletteKey);
 
-      if (text.includes('cormorant')) {
-        edits.fontPair = 'cormorant-italianno';
-        applyFontPair(edits.fontPair);
-      } else if (text.includes('inter')) {
-        edits.fontPair = 'inter-script';
-        applyFontPair(edits.fontPair);
-      } else if (text.includes('italiana')) {
-        edits.fontPair = 'italiana-pinyon';
-        applyFontPair(edits.fontPair);
-      }
+      if (text.includes('cormorant')) { edits.fontPair = 'cormorant-italianno'; applyFontPair(edits.fontPair); }
+      else if (text.includes('inter')) { edits.fontPair = 'inter-script'; applyFontPair(edits.fontPair); }
+      else if (text.includes('italiana')) { edits.fontPair = 'italiana-pinyon'; applyFontPair(edits.fontPair); }
 
-      if (text.includes('editorial')) {
-        edits.mode = 'editorial';
-        setBodyMode('editorial');
-      } else if (text.includes('clasica') || text.includes('classic')) {
-        edits.mode = 'classic';
-        setBodyMode('classic');
-      }
+      if (text.includes('editorial')) { edits.mode = 'editorial'; setBodyMode('editorial'); }
+      else if (text.includes('clasica') || text.includes('classic')) { edits.mode = 'classic'; setBodyMode('classic'); }
 
       if (Object.keys(edits).length) {
         window.__AA_LAST_DESIGN_TWEAKS__ = Object.assign({}, window.__AA_LAST_DESIGN_TWEAKS__ || DEFAULT_TWEAKS, edits);
@@ -159,11 +151,36 @@
       }
     }
 
+    function colorPreview(p){
+      return `<div style="display:flex;gap:6px;height:36px;margin-bottom:10px"><i style="flex:2;background:${p.vars.paper};border:1px solid rgba(0,0,0,.08);border-radius:3px"></i><i style="flex:1;background:${p.vars.deep};border-radius:3px"></i><i style="flex:1;background:${p.vars.main};border-radius:3px"></i><i style="flex:1;background:${p.vars.light};border-radius:3px"></i></div>`;
+    }
+
+    function injectLilacButton(){
+      const panel = document.querySelector('.admin-panel.open');
+      if (!panel || panel.querySelector('[data-aa-palette-key="lilac"]')) return;
+      const active = panel.querySelector('.tabs button.on');
+      const activeText = cleanText(active);
+      const body = panel.querySelector('.body');
+      if (!body || !(activeText.includes('diseno') || activeText.includes('design'))) return;
+
+      const p = PASTEL.lilac;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.dataset.aaPaletteKey = 'lilac';
+      btn.style.cssText = 'appearance:none;cursor:pointer;padding:14px;text-align:left;border:1px solid #9b82bd;background:#fff;border-radius:6px;display:flex;flex-direction:column;gap:10px;margin-top:4px;width:100%;';
+      btn.innerHTML = colorPreview(p) + '<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:var(--serif);font-size:14px;color:var(--ink);font-style:italic">Lila pastel</span><span class="micro" style="color:#9b82bd;font-size:9px">Nuevo</span></div>';
+
+      const firstGrid = body.querySelector('div[style*="grid-template-columns"]');
+      if (firstGrid) firstGrid.appendChild(btn);
+      else body.insertBefore(btn, body.firstChild);
+    }
+
     function paintDesignButtons(){
+      injectLilacButton();
       document.querySelectorAll('.admin-panel button').forEach(btn => {
-        const key = paletteKeyFromText(cleanText(btn));
-        if (!key || btn.dataset.aaPastelReady) return;
-        btn.dataset.aaPastelReady = '1';
+        const key = btn.dataset.aaPaletteKey || paletteKeyFromText(cleanText(btn));
+        if (!key || !PASTEL[key] || btn.dataset.aaPastelReady === key) return;
+        btn.dataset.aaPastelReady = key;
         const p = PASTEL[key].vars;
         btn.style.setProperty('background', `linear-gradient(135deg, ${p.paper} 0%, ${p.light} 58%, ${p.main} 100%)`, 'important');
         btn.style.setProperty('border-color', p.deep, 'important');
@@ -189,21 +206,16 @@
     const mo = new MutationObserver(() => paintDesignButtons());
     mo.observe(document.documentElement, { childList:true, subtree:true });
 
-    // Force visible pastel as soon as this file loads, before any saved data arrives.
     applyTweaks(DEFAULT_TWEAKS);
-    setTimeout(() => applyTweaks(window.__AA_LAST_DESIGN_TWEAKS__ || DEFAULT_TWEAKS), 100);
-    setTimeout(() => applyTweaks(window.__AA_LAST_DESIGN_TWEAKS__ || DEFAULT_TWEAKS), 500);
-    setInterval(() => applyTweaks(window.__AA_LAST_DESIGN_TWEAKS__ || DEFAULT_TWEAKS), 2500);
+    setTimeout(() => { paintDesignButtons(); applyTweaks(window.__AA_LAST_DESIGN_TWEAKS__ || DEFAULT_TWEAKS); }, 100);
+    setTimeout(() => { paintDesignButtons(); applyTweaks(window.__AA_LAST_DESIGN_TWEAKS__ || DEFAULT_TWEAKS); }, 500);
+    setInterval(() => { paintDesignButtons(); applyTweaks(window.__AA_LAST_DESIGN_TWEAKS__ || DEFAULT_TWEAKS); }, 2500);
 
     fetchContent().then(data => {
       const tweaks = data && data._tweaks ? data._tweaks : DEFAULT_TWEAKS;
       window.__AA_LAST_DESIGN_TWEAKS__ = applyTweaks(tweaks);
-    }).catch(() => {
-      window.__AA_LAST_DESIGN_TWEAKS__ = applyTweaks(DEFAULT_TWEAKS);
-    });
+    }).catch(() => { window.__AA_LAST_DESIGN_TWEAKS__ = applyTweaks(DEFAULT_TWEAKS); });
 
     window.AAApplyDesignTweaks = applyTweaks;
-  } catch(err) {
-    console.error('[DesignLiveFix] disabled:', err);
-  }
+  } catch(err) { console.error('[DesignLiveFix] disabled:', err); }
 })();
