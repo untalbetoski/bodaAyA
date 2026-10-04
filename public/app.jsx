@@ -103,7 +103,6 @@ function NavBar({ lang, setLang, L }) {
     { id:"home", label:L.nav.home },
     { id:"details", label:L.nav.details },
     { id:"program", label:L.nav.program },
-    { id:"rsvp", label:L.nav.rsvp },
     { id:"gallery", label:L.nav.gallery },
   ];
   const scrollTo = (id) => {
@@ -276,7 +275,6 @@ function App() {
         <EventsSection data={data} L={L} lang={lang} />
         <DressSection data={data} L={L} lang={lang} />
         <ItinerarySection data={data} L={L} lang={lang} />
-        <RSVPSection data={data} L={L} lang={lang} />
         <GallerySection data={data} L={L} lang={lang} />
         <PlaylistSection data={data} L={L} lang={lang} />
         <GiftsSection data={data} L={L} lang={lang} />
