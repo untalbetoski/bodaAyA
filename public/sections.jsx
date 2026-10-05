@@ -287,38 +287,40 @@ const DRESS_SWATCHES_DAY2 = [
   { c:"#d3d3d3", es:"Gris", en:"Gray" },
 ];
 
+function dressColorName(label, lang) {
+  if (lang === "es") return label;
+  const map = {
+    "Durazno":"Peach","Verde":"Green","Lila":"Lilac","Azul":"Blue","Rosa":"Pink",
+    "Rojo":"Red","Fucsia":"Fuchsia","Café":"Brown","Cafe":"Brown",
+    "Naranja":"Orange","Naranja Anteado":"Orange","Amarillo":"Yellow","Sandía":"Watermelon",
+    "Marfil":"Ivory","Caqui":"Khaki","Crudo":"Ecru","Lino":"Linen","Gris":"Gray",
+    "Ivory":"Ivory","Khaki":"Khaki"
+  };
+  return map[label] || label;
+}
+
 function DressCard({ d, swatches, lang, L }) {
   if (!d) return null;
   return (
     <Reveal>
-      <div style={{
-        padding:"42px 36px 36px",
-        border:"1px solid var(--line)",
-        background:"rgba(255,255,255,.55)",
-        height:"100%",
-        display:"flex", flexDirection:"column",
-        position:"relative",
-      }}>
-        <div className="micro" style={{ color:"var(--sage-deep)", marginBottom:14, letterSpacing:".28em" }}>
-          {pickByLang(d, "day", lang)}
+      <div style={{padding:"42px 36px 36px",border:"1px solid var(--line)",background:"rgba(255,255,255,.55)",height:"100%",display:"flex",flexDirection:"column",position:"relative"}}>
+        <div className="micro" style={{color:"var(--sage-deep)",marginBottom:14,letterSpacing:".28em"}}>{pickByLang(d,"day",lang)}</div>
+        <h3 className="display" style={{fontSize:"clamp(28px,3.2vw,40px)",margin:"0 0 6px",lineHeight:1.1,color:"var(--ink)"}}>{pickByLang(d,"code",lang)}</h3>
+        <p style={{fontSize:16,color:"var(--ink-soft)",lineHeight:1.7,fontStyle:"italic",margin:"18px 0 0"}}>{pickByLang(d,"desc",lang)}</p>
+        <div style={{marginTop:24,display:"flex",alignItems:"center",gap:14,padding:"12px 18px",border:"1px dashed var(--line)"}}>
+          <span className="micro" style={{color:"var(--sage-deep)",flexShrink:0}}>{L.dress_avoid}</span>
+          <span style={{fontSize:13.5,color:"var(--ink-soft)",lineHeight:1.5}}>{pickByLang(d,"avoid",lang)}</span>
         </div>
-        <h3 className="display" style={{ fontSize:"clamp(28px,3.2vw,40px)", margin:"0 0 6px", lineHeight:1.1, color:"var(--ink)" }}>
-          {pickByLang(d, "code", lang)}
-        </h3>
-        <p style={{ fontSize:16, color:"var(--ink-soft)", lineHeight:1.7, fontStyle:"italic", margin:"18px 0 0" }}>
-          {pickByLang(d, "desc", lang)}
-        </p>
-        <div style={{ marginTop:24, display:"flex", alignItems:"center", gap:14, padding:"12px 18px", border:"1px dashed var(--line)" }}>
-          <span className="micro" style={{ color:"var(--sage-deep)", flexShrink:0 }}>{L.dress_avoid}</span>
-          <span style={{ fontSize:13.5, color:"var(--ink-soft)", lineHeight:1.5 }}>
-            {pickByLang(d, "avoid", lang)}
-          </span>
+        <div className="aa-colores-sugeridos" style={{marginTop:"auto",paddingTop:28,textAlign:"center",fontFamily:"var(--sans)",fontSize:8,letterSpacing:".16em",textTransform:"uppercase",color:"var(--ink-soft)"}}>
+          {lang==="es" ? "Colores sugeridos" : "Suggested colors"}
         </div>
-        <div style={{ marginTop:"auto", paddingTop:32, display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:10 }}>
-          {swatches.map((sw,i) => (
-            <div key={i} style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:6 }}>
-              <div style={{ width:"100%", aspectRatio:"1", background:sw.c, borderRadius:"50%", boxShadow:"inset 0 -6px 14px rgba(0,0,0,.08)" }}></div>
-              <span style={{fontFamily:"Arial, sans-serif",fontSize:6,fontWeight:400,letterSpacing:0,textTransform:"none",whiteSpace:"nowrap",lineHeight:1,color:"var(--ink-soft)"}}>{sw[lang]}</span>
+        <div className="dress-swatch-grid" style={{paddingTop:12,display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:8}}>
+          {swatches.map((sw,i)=>(
+            <div className="dress-swatch-item" key={i} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4,minWidth:0}}>
+              <div className="dress-color-dot" style={{width:38,height:38,background:sw.c,borderRadius:"50%",boxShadow:"inset 0 -6px 14px rgba(0,0,0,.08)",flex:"0 0 38px"}}></div>
+              <span className="dress-swatch-label" style={{fontFamily:"Arial, sans-serif",fontSize:"6px",fontWeight:400,letterSpacing:0,textTransform:"none",whiteSpace:"nowrap",lineHeight:1,textAlign:"center",width:"auto",overflow:"visible"}}>
+                {dressColorName(sw.l || sw.es || sw.en || "", lang)}
+              </span>
             </div>
           ))}
         </div>
@@ -328,27 +330,22 @@ function DressCard({ d, swatches, lang, L }) {
 }
 
 function DressSection({ data, L, lang }) {
-  const hasDay2 = !!data.dress2;
+  const hasDay2=!!data.dress2;
+  const day1=(data.dressAdmin && data.dressAdmin.day1 && data.dressAdmin.day1.swatches) || DRESS_SWATCHES_DAY1.map(x=>({c:x.c,l:x.es}));
+  const day2=(data.dressAdmin && data.dressAdmin.day2 && data.dressAdmin.day2.swatches) || DRESS_SWATCHES_DAY2.map(x=>({c:x.c,l:x.es}));
   return (
     <section className="s" id="dress">
       <div className="inner">
-        <SectionHead
-          kicker={L.dress_kicker}
-          title={hasDay2 ? (lang==="es"?"Dos códigos, dos celebraciones":"Two codes, two celebrations") : pickByLang(data.dress, "code", lang)}
-          sub={hasDay2 ? (lang==="es"?"Un código distinto para cada día.":"A different dress code for each day.") : ""}
-        />
-        <div style={{
-          display:"grid",
-          gridTemplateColumns: hasDay2 ? "1fr 1fr" : "1fr",
-          gap:28,
-          maxWidth: hasDay2 ? 980 : 640,
-          margin:"0 auto",
-        }} className="dr-grid">
-          <DressCard d={data.dress} swatches={DRESS_SWATCHES_DAY1} lang={lang} L={L} />
-          {hasDay2 && <DressCard d={data.dress2} swatches={DRESS_SWATCHES_DAY2} lang={lang} L={L} />}
+        <SectionHead kicker={L.dress_kicker} title={hasDay2?(lang==="es"?"Dos códigos, dos celebraciones":"Two codes, two celebrations"):pickByLang(data.dress,"code",lang)} sub={hasDay2?(lang==="es"?"Un código distinto para cada día.":"A different dress code for each day."):""} />
+        <div className="dr-grid" style={{display:"grid",gridTemplateColumns:hasDay2?"1fr 1fr":"1fr",gap:28,maxWidth:hasDay2?980:640,margin:"0 auto"}}>
+          <DressCard d={data.dress} swatches={day1} lang={lang} L={L}/>
+          {hasDay2 && <DressCard d={data.dress2} swatches={day2} lang={lang} L={L}/>}
         </div>
       </div>
-      <style>{`@media (max-width:720px){ .dr-grid{ grid-template-columns:1fr !important; } }`}</style>
+      <style>{`
+        #dress .dress-swatch-label{font-size:6px!important;letter-spacing:0!important;text-transform:none!important;white-space:nowrap!important;line-height:1!important;font-weight:400!important;}
+        @media(max-width:720px){.dr-grid{grid-template-columns:1fr!important;}#dress .dress-swatch-label{font-size:5.5px!important;}}
+      `}</style>
     </section>
   );
 }
