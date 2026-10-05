@@ -188,5 +188,29 @@
 <script type="text/babel" src="app.jsx"></script>
 <script src="design-live-fix.js?v=3"></script>
 
+<script>
+(function(){
+  var ES=['Naranja','Durazno','Amarillo','Sandía','Rosa','Marfil','Caqui','Crudo','Lino','Gris'];
+  var EN=['Orange','Peach','Yellow','Watermelon','Pink','Ivory','Khaki','Ecru','Linen','Gray'];
+  function fix(){
+    var s=document.getElementById('dress'); if(!s)return;
+    var circles=[].slice.call(s.querySelectorAll('div')).filter(function(x){
+      var st=x.getAttribute('style')||'';
+      return st.indexOf('border-radius: 50%')>=0 || st.indexOf('border-radius:50%')>=0;
+    });
+    var en=!!s.ownerDocument.querySelector('.lang-toggle button.on') && 
+      (s.ownerDocument.querySelector('.lang-toggle button.on').textContent||'').trim()==='EN';
+    circles.slice(0,10).forEach(function(circle,i){
+      var p=circle.parentElement; if(!p)return;
+      var label=p.lastElementChild; if(!label || label===circle)return;
+      label.textContent=(en?EN:ES)[i];
+      label.style.cssText='font-family:Arial,sans-serif!important;font-size:6px!important;font-weight:400!important;letter-spacing:0!important;text-transform:none!important;white-space:nowrap!important;line-height:1!important;color:var(--ink-soft)!important;';
+    });
+  }
+  document.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('.lang-toggle'))setTimeout(fix,20)},true);
+  new MutationObserver(function(){requestAnimationFrame(fix)}).observe(document.getElementById('root')||document.body,{subtree:true,childList:true});
+  setInterval(fix,700); setTimeout(fix,50); setTimeout(fix,500);
+})();
+</script>
 </body>
 </html>
