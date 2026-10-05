@@ -318,7 +318,7 @@ function DressCard({ d, swatches, lang, L }) {
           {swatches.map((sw,i) => (
             <div key={i} style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:6 }}>
               <div style={{ width:"100%", aspectRatio:"1", background:sw.c, borderRadius:"50%", boxShadow:"inset 0 -6px 14px rgba(0,0,0,.08)" }}></div>
-              <div className="micro" style={{ fontSize:7, letterSpacing:".08em", whiteSpace:"nowrap", lineHeight:1.1 }}>{sw.l}</div>
+              <div className="micro dress-swatch-label">{sw.l}</div>
             </div>
           ))}
         </div>
@@ -348,7 +348,7 @@ function DressSection({ data, L, lang }) {
           {hasDay2 && <DressCard d={data.dress2} swatches={DRESS_SWATCHES_DAY2} lang={lang} L={L} />}
         </div>
       </div>
-      <style>{`@media (max-width:720px){ .dr-grid{ grid-template-columns: 1fr !important; } }`}</style>
+      <style>{`\n        .dress-swatch-label{ font-size:7px !important; letter-spacing:.04em !important; white-space:nowrap !important; line-height:1 !important; text-align:center; width:max-content; max-width:none; }\n        @media (max-width:720px){ .dr-grid{ grid-template-columns: 1fr !important; } .dress-swatch-label{ font-size:6.5px !important; letter-spacing:.02em !important; } }\n      `}</style>
     </section>
   );
 }
