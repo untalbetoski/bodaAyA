@@ -318,7 +318,7 @@ function DressCard({ d, swatches, lang, L }) {
           {swatches.map((sw,i) => (
             <div key={i} style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:6 }}>
               <div style={{ width:"100%", aspectRatio:"1", background:sw.c, borderRadius:"50%", boxShadow:"inset 0 -6px 14px rgba(0,0,0,.08)" }}></div>
-              <div className="micro" style={{ fontSize:8.5 }}>{sw.l}</div>
+              <div className="micro" style={{ fontSize:7, letterSpacing:".08em", whiteSpace:"nowrap", lineHeight:1.1 }}>{sw.l}</div>
             </div>
           ))}
         </div>
