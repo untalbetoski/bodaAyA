@@ -169,6 +169,43 @@ function NavBar({ lang, setLang, L }) {
   );
 }
 
+function AppDressColorName(sw, lang) {
+  const raw = String((sw && (sw.l || sw.es || sw.en)) || "").trim();
+  if (lang === "es") return (sw && sw.es) || raw;
+  if (sw && sw.en) return sw.en;
+  const key = raw.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+  const map = {"durazno":"Peach","verde":"Green","lila":"Lilac","azul":"Blue","rosa":"Pink","rojo":"Red","fucsia":"Fuchsia","cafe":"Brown","naranja":"Orange","naranja anteado":"Orange","amarillo":"Yellow","sandia":"Watermelon","marfil":"Ivory","caqui":"Khaki","crudo":"Ecru","lino":"Linen","gris":"Gray","ivory":"Ivory","khaki":"Khaki"};
+  return map[key] || raw;
+}
+function AppDressCard({ d, swatches, lang, L }) {
+  if (!d) return null;
+  return <Reveal><div style={{padding:"42px 36px 36px",border:"1px solid var(--line)",background:"rgba(255,255,255,.55)",height:"100%",display:"flex",flexDirection:"column"}}>
+    <div className="micro" style={{color:"var(--sage-deep)",marginBottom:14}}>{pickByLang(d,"day",lang)}</div>
+    <h3 className="display" style={{fontSize:"clamp(28px,3.2vw,40px)",margin:"0 0 6px"}}>{pickByLang(d,"code",lang)}</h3>
+    <p style={{fontSize:16,color:"var(--ink-soft)",lineHeight:1.7,fontStyle:"italic",margin:"18px 0 0"}}>{pickByLang(d,"desc",lang)}</p>
+    <div style={{marginTop:24,display:"flex",gap:14,padding:"12px 18px",border:"1px dashed var(--line)"}}><span className="micro" style={{color:"var(--sage-deep)",flexShrink:0}}>{L.dress_avoid}</span><span style={{fontSize:13.5,color:"var(--ink-soft)"}}>{pickByLang(d,"avoid",lang)}</span></div>
+    <div style={{marginTop:"auto",paddingTop:28,textAlign:"center",fontFamily:"var(--sans)",fontSize:8,letterSpacing:".16em",textTransform:"uppercase",color:"var(--ink-soft)"}}>{lang==="es"?"Colores sugeridos":"Suggested colors"}</div>
+    <div style={{paddingTop:12,display:"grid",gridTemplateColumns:"repeat(5,minmax(0,1fr))",gap:8}}>
+      {swatches.map((sw,i)=><div key={i} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4,minWidth:0}}>
+        <div style={{width:38,height:38,background:sw.c,borderRadius:"50%",boxShadow:"inset 0 -6px 14px rgba(0,0,0,.08)",flex:"0 0 38px"}} />
+        <span style={{fontFamily:"Arial,sans-serif",fontSize:6,fontWeight:400,letterSpacing:0,textTransform:"none",whiteSpace:"nowrap",lineHeight:1,textAlign:"center"}}>{AppDressColorName(sw,lang)}</span>
+      </div>)}
+    </div>
+  </div></Reveal>;
+}
+function AppDressSection({ data, L, lang }) {
+  const hasDay2=!!data.dress2;
+  const day1=(data.dressAdmin?.day1?.swatches)||[];
+  const day2=(data.dressAdmin?.day2?.swatches)||[];
+  return <section className="s" id="dress"><div className="inner">
+    <SectionHead kicker={L.dress_kicker} title={hasDay2?(lang==="es"?"Dos códigos, dos celebraciones":"Two codes, two celebrations"):pickByLang(data.dress,"code",lang)} sub={hasDay2?(lang==="es"?"Un código distinto para cada día.":"A different dress code for each day."):""} />
+    <div className="dr-grid" style={{display:"grid",gridTemplateColumns:hasDay2?"1fr 1fr":"1fr",gap:28,maxWidth:hasDay2?980:640,margin:"0 auto"}}>
+      <AppDressCard d={data.dress} swatches={day1} lang={lang} L={L}/>
+      {hasDay2&&<AppDressCard d={data.dress2} swatches={day2} lang={lang} L={L}/>}
+    </div>
+  </div><style>{`@media(max-width:720px){.dr-grid{grid-template-columns:1fr!important}}`}</style></section>;
+}
+
 function App() {
   const [t, rawSetTweak] = useTweaks(TWEAK_DEFAULTS);
   const [lang, setLang] = useStateApp("es");
@@ -320,7 +357,7 @@ function App() {
         <Countdown data={data} L={L} />
         <WelcomeMessage data={data} lang={lang} />
         <EventsSection data={data} L={L} lang={lang} />
-        <DressSection data={data} L={L} lang={lang} />
+        <AppDressSection data={data} L={L} lang={lang} />
         <ItinerarySection data={data} L={L} lang={lang} />
         <GallerySection data={data} L={L} lang={lang} />
         <PlaylistSection data={data} L={L} lang={lang} />
