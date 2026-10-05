@@ -318,7 +318,7 @@ function DressCard({ d, swatches, lang, L }) {
           {swatches.map((sw,i) => (
             <div key={i} style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:6 }}>
               <div style={{ width:"100%", aspectRatio:"1", background:sw.c, borderRadius:"50%", boxShadow:"inset 0 -6px 14px rgba(0,0,0,.08)" }}></div>
-              <div className="dress-swatch-label" style={{fontSize:"4px",letterSpacing:0,textTransform:"none",whiteSpace:"nowrap",fontWeight:400,lineHeight:1}}>{lang==="es" ? sw.es : sw.en}</div>
+              <div className="dress-swatch-label" style={{fontFamily:"Arial, sans-serif",fontSize:"9px",letterSpacing:"0",textTransform:"none",whiteSpace:"nowrap",fontWeight:400,lineHeight:"10px",transform:"scale(.72)",transformOrigin:"top center",width:"138%",marginLeft:"-19%"}}>{lang==="es" ? sw.es : sw.en}</div>
             </div>
           ))}
         </div>
