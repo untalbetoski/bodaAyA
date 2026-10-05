@@ -73,6 +73,52 @@ function applyDesignTweaks(tweaks = {}) {
   document.head.appendChild(link);
 })();
 
+function WelcomeMessage({ lang, data }) {
+  const w = {
+    title_es: "Bienvenidos", title_en: "Welcome",
+    subtitle_es: "Gracias por formar parte de nuestra historia y de este nuevo comienzo.",
+    subtitle_en: "Thank you for being part of our story and this new beginning.",
+    aside_label: "Andrea & Alberto",
+    aside_title_es: "Oaxaca nos espera", aside_title_en: "Oaxaca awaits us",
+    aside_date_es: "15, 16 y 17 de abril 2027", aside_date_en: "April 15, 16 & 17, 2027",
+    aside_place_es: "Oaxaca, México", aside_place_en: "Oaxaca, Mexico",
+    greeting_es: "Querida familia y queridos amigos:", greeting_en: "Dear family and friends:",
+    body_es: "Si hoy están aquí, es porque de alguna manera han formado parte de nuestra historia. Algunos nos vieron crecer, otros caminaron junto a nosotros en momentos importantes, y muchos llegaron para recordarnos que las mejores cosas de la vida siempre se construyen en compañía.\n\nEl 16 de abril de 2027, en la maravillosa ciudad de Oaxaca, celebraremos el inicio de una nueva etapa. Más que una boda, será un encuentro de personas que amamos profundamente, un día para agradecer, abrazar, reír, recordar y crear nuevos recuerdos que permanecerán con nosotros para siempre.\n\nCreemos que el amor no une únicamente a dos personas; también entrelaza familias, fortalece amistades y nos recuerda que la verdadera riqueza de la vida está en quienes caminan a nuestro lado. Por eso, su presencia es el regalo más valioso que podríamos recibir.\n\nCada palabra de aliento, cada abrazo, cada sonrisa y cada momento compartido han contribuido, de una u otra forma, a llevarnos hasta este día. Gracias por acompañarnos en nuestro pasado, por estar presentes en este momento tan especial y por ser parte del futuro que comenzamos a escribir juntos.\n\nDeseamos que disfruten cada instante de esta celebración tanto como nosotros hemos disfrutado imaginarla y prepararla. Queremos que Oaxaca, con su historia, su cultura y su calidez, sea el escenario perfecto para reunir a quienes ocupan un lugar especial en nuestro corazón.\n\nGracias por recorrer este camino con nosotros. Que esta celebración esté llena de alegría, amor, esperanza y gratitud, y que cada momento vivido nos recuerde que los mejores recuerdos siempre nacen cuando compartimos la vida con las personas que más queremos.",
+    body_en: "If you are here today, it is because in one way or another you have been part of our story. Some of you watched us grow, others walked beside us through important moments, and many came into our lives to remind us that the best things in life are always built together.\n\nOn April 16, 2027, in the wonderful city of Oaxaca, we will celebrate the beginning of a new chapter. More than a wedding, it will be a gathering of people we deeply love—a day to give thanks, embrace, laugh, remember, and create new memories that will stay with us forever.\n\nWe believe that love does not unite only two people; it also weaves families together, strengthens friendships, and reminds us that life's true richness lies in those who walk beside us. That is why your presence is the most precious gift we could receive.\n\nEvery word of encouragement, every embrace, every smile, and every shared moment has contributed, in one way or another, to bringing us to this day. Thank you for being part of our past, for being present in this very special moment, and for being part of the future we are beginning to write together.\n\nWe hope you enjoy every moment of this celebration as much as we have enjoyed imagining and preparing it. We want Oaxaca, with its history, culture, and warmth, to be the perfect setting to bring together those who hold a special place in our hearts.\n\nThank you for walking this journey with us. May this celebration be filled with joy, love, hope, and gratitude, and may every moment remind us that the best memories are always born when we share life with the people we love most.",
+    sign_label_es: "Con todo nuestro cariño", sign_label_en: "With all our love",
+    signature: "Andrea & Alberto",
+    ...((data && data.welcome) || {})
+  };
+  const pick = (key) => w[key + "_" + lang] || w[key + "_es"] || "";
+  return (
+    <section className="s" id="welcome">
+      <div className="inner">
+        <div className="aa-section-head reveal in">
+          <h2 className="aa-welcome-title display">{pick("title")}</h2>
+          <p className="aa-section-sub">{pick("subtitle")}</p>
+        </div>
+        <div className="aa-welcome-editorial reveal in">
+          <aside className="aa-welcome-aside">
+            <div className="aa-small-label">{w.aside_label}</div>
+            <div className="aa-side-script">{pick("aside_title")}</div>
+            <div className="aa-date-line">{pick("aside_date")}<br/>{pick("aside_place")}</div>
+          </aside>
+          <article>
+            <div className="aa-welcome-copy">
+              <p>{pick("greeting")}</p>
+              {String(pick("body")).split(/\n\s*\n/).filter(Boolean).map((p,i)=><p key={i}>{p}</p>)}
+            </div>
+            <div className="aa-welcome-signature">
+              <div className="aa-with-love">{pick("sign_label")}</div>
+              <div className="aa-names">{w.signature}</div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function SiteFooter({ lang, openAdmin, data }) {
   return (
     <footer className="site-footer">
@@ -272,6 +318,7 @@ function App() {
       <main>
         <Hero data={data} L={L} lang={lang} mode={t.mode} />
         <Countdown data={data} L={L} />
+        <WelcomeMessage data={data} lang={lang} />
         <EventsSection data={data} L={L} lang={lang} />
         <DressSection data={data} L={L} lang={lang} />
         <ItinerarySection data={data} L={L} lang={lang} />
