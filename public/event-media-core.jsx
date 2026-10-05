@@ -97,7 +97,7 @@
       <section className="s" id="details">
         <WatercolorStamp size={400} style={{ position:"absolute", top:"10%", right:"-10%", opacity:.4, transform:"rotate(-15deg)" }} />
         <div className="inner" style={{ display:"flex", flexDirection:"column", gap:120 }}>
-          <SectionHead kicker={L.program_kicker} title={lang==="es" ? "Dos días para celebrar" : "Two days to celebrate"} sub={lang==="es" ? "Acompáñanos a este encuentro." : "Join us for these gatherings."} />
+          <SectionHead kicker={L.program_kicker} title={lang==="es" ? "Tres días para celebrar" : "Three days to celebrate"} sub={lang==="es" ? "Acompáñanos a este encuentro." : "Join us for these gatherings."} />
           {data.icebreaker && <EventCardWithMedia ev={data.icebreaker} side="right" lang={lang} L={L} />}
           <EventCardWithMedia ev={data.ceremony} side="left" lang={lang} L={L} />
           <EventCardWithMedia ev={data.reception} side="right" lang={lang} L={L} />
