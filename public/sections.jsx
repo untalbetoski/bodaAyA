@@ -273,18 +273,18 @@ function EventsSection({ data, L, lang }) {
 
 // DRESS CODE ──────────────────────────────────────────────────────────────
 const DRESS_SWATCHES_DAY1 = [
-  { c:"#ffbb7c", l:"Naranja Anteado" },
-  { c:"#f6d0b4", l:"Durazno" },
-  { c:"#fdfd96", l:"Amarillo" },
-  { c:"#fc6c85", l:"Sandía" },
-  { c:"#ffb5c0", l:"Rosa" },
+  { c:"#ffbb7c", es:"Naranja Anteado", en:"Sunset Orange" },
+  { c:"#f6d0b4", es:"Durazno", en:"Peach" },
+  { c:"#fdfd96", es:"Amarillo", en:"Yellow" },
+  { c:"#fc6c85", es:"Sandía", en:"Watermelon" },
+  { c:"#ffb5c0", es:"Rosa", en:"Pink" },
 ];
 const DRESS_SWATCHES_DAY2 = [
-  { c:"#f4ede2", l:"Ivory" },
-  { c:"#c5a572", l:"Khaki" },
-  { c:"#e0cd95", l:"Crudo" },
-  { c:"#faf0e6", l:"Lino" },
-  { c:"#d3d3d3", l:"Gris" },
+  { c:"#f4ede2", es:"Marfil", en:"Ivory" },
+  { c:"#c5a572", es:"Caqui", en:"Khaki" },
+  { c:"#e0cd95", es:"Crudo", en:"Ecru" },
+  { c:"#faf0e6", es:"Lino", en:"Linen" },
+  { c:"#d3d3d3", es:"Gris", en:"Gray" },
 ];
 
 function DressCard({ d, swatches, lang, L }) {
@@ -318,7 +318,7 @@ function DressCard({ d, swatches, lang, L }) {
           {swatches.map((sw,i) => (
             <div key={i} style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:6 }}>
               <div style={{ width:"100%", aspectRatio:"1", background:sw.c, borderRadius:"50%", boxShadow:"inset 0 -6px 14px rgba(0,0,0,.08)" }}></div>
-              <div className="dress-swatch-label">{sw.l}</div>
+              <div className="dress-swatch-label" style={{fontSize:"4px",letterSpacing:0,textTransform:"none",whiteSpace:"nowrap",fontWeight:400,lineHeight:1}}>{lang==="es" ? sw.es : sw.en}</div>
             </div>
           ))}
         </div>
