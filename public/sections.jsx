@@ -291,14 +291,15 @@ function dressColorName(sw, lang) {
   const raw = String((sw && (sw.l || sw.es || sw.en)) || "").trim();
   if (lang === "es") return (sw && sw.es) || raw;
   if (sw && sw.en) return sw.en;
+  const key = raw.normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toLowerCase();
   const map = {
-    "Durazno":"Peach","Verde":"Green","Lila":"Lilac","Azul":"Blue","Rosa":"Pink",
-    "Rojo":"Red","Fucsia":"Fuchsia","Café":"Brown","Cafe":"Brown",
-    "Naranja":"Orange","Naranja Anteado":"Orange","Amarillo":"Yellow","Sandía":"Watermelon",
-    "Marfil":"Ivory","Caqui":"Khaki","Crudo":"Ecru","Lino":"Linen","Gris":"Gray",
-    "Ivory":"Ivory","Khaki":"Khaki"
+    "durazno":"Peach","verde":"Green","lila":"Lilac","azul":"Blue","rosa":"Pink",
+    "rojo":"Red","fucsia":"Fuchsia","cafe":"Brown","naranja":"Orange",
+    "naranja anteado":"Orange","amarillo":"Yellow","sandia":"Watermelon",
+    "marfil":"Ivory","caqui":"Khaki","crudo":"Ecru","lino":"Linen","gris":"Gray",
+    "ivory":"Ivory","khaki":"Khaki"
   };
-  return map[raw] || raw;
+  return map[key] || raw;
 }
 
 function DressCard({ d, swatches, lang, L }) {
