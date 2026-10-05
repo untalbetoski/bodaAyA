@@ -1,35 +1,5 @@
 // gallery-cloud.jsx — safe gallery upload + icebreaker display without persistence wrapping
 
-const FIXED_DRESS_SWATCHES_DAY1 = [
-  { c:"#ffbb7c", l:"Naranja Anteado" },
-  { c:"#f6d0b4", l:"Durazno" },
-  { c:"#fdfd96", l:"Amarillo" },
-  { c:"#fc6c85", l:"Sandía" },
-  { c:"#ffb5c0", l:"Rosa" },
-];
-
-const FIXED_DRESS_SWATCHES_DAY2 = [
-  { c:"#f4ede2", l:"Ivory" },
-  { c:"#c5a572", l:"Khaki" },
-  { c:"#e0cd95", l:"Crudo" },
-  { c:"#faf0e6", l:"Lino" },
-  { c:"#d3d3d3", l:"Gris" },
-];
-
-(function addFixedDressCSS(){
-  if (document.getElementById("aa-fixed-dress-css")) return;
-  const style = document.createElement("style");
-  style.id = "aa-fixed-dress-css";
-  style.textContent = `
-    #dress .dress-swatch-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;align-items:start;}
-    #dress .dress-swatch-item{min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;}
-    #dress .dress-color-dot{width:44px!important;height:44px!important;min-width:44px!important;max-width:44px!important;flex:0 0 44px!important;border-radius:50%!important;aspect-ratio:1/1!important;margin:0 auto!important;display:block!important;}
-    #dress .dress-swatch-label{width:100%;text-align:center;white-space:normal;overflow-wrap:anywhere;line-height:1.15;}
-    @media(max-width:720px){#dress .dress-color-dot{width:40px!important;height:40px!important;min-width:40px!important;max-width:40px!important;flex-basis:40px!important;}}
-  `;
-  document.head.appendChild(style);
-})();
-
 const ICEBREAKER_EVENT = {
   title_es: "Rompe Hielo",
   title_en: "Icebreaker",
@@ -69,56 +39,6 @@ function withIcebreaker(data){
     window.ICEBREAKER_EVENT = ICEBREAKER_EVENT;
   } catch(e) {}
 })();
-
-if (typeof Reveal !== "undefined" && typeof SectionHead !== "undefined") {
-  function FixedDressCard({ d, swatches, lang, L }) {
-    if (!d) return null;
-    return (
-      <Reveal>
-        <div style={{padding:"42px 36px 36px",border:"1px solid var(--line)",background:"rgba(255,255,255,.55)",height:"100%",display:"flex",flexDirection:"column",position:"relative"}}>
-          <div className="micro" style={{color:"var(--sage-deep)",marginBottom:14,letterSpacing:".28em"}}>{pickByLang(d,"day",lang)}</div>
-          <h3 className="display" style={{fontSize:"clamp(28px,3.2vw,40px)",margin:"0 0 6px",lineHeight:1.1,color:"var(--ink)"}}>{pickByLang(d,"code",lang)}</h3>
-          <p style={{fontSize:16,color:"var(--ink-soft)",lineHeight:1.7,fontStyle:"italic",margin:"18px 0 0"}}>{pickByLang(d,"desc",lang)}</p>
-          <div style={{marginTop:24,display:"flex",alignItems:"center",gap:14,padding:"12px 18px",border:"1px dashed var(--line)"}}>
-            <span className="micro" style={{color:"var(--sage-deep)",flexShrink:0}}>{L.dress_avoid}</span>
-            <span style={{fontSize:13.5,color:"var(--ink-soft)",lineHeight:1.5}}>{pickByLang(d,"avoid",lang)}</span>
-          </div>
-          <div className="dress-swatch-grid" style={{marginTop:"auto",paddingTop:32}}>
-            {swatches.map((sw,i)=>(
-              <div key={i} className="dress-swatch-item">
-                <div className="dress-color-dot" style={{background:sw.c,boxShadow:"inset 0 -6px 14px rgba(0,0,0,.08)"}}></div>
-                <div className="micro dress-swatch-label" style={{fontSize:8.5}}>{sw.l}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </Reveal>
-    );
-  }
-
-  function FixedDressSection({ data, L, lang }) {
-    const hasDay2 = !!data.dress2;
-    return (
-      <section className="s" id="dress">
-        <div className="inner">
-          <SectionHead
-            kicker={L.dress_kicker}
-            title={hasDay2 ? (lang==="es"?"Dos códigos, dos celebraciones":"Two codes, two celebrations") : pickByLang(data.dress,"code",lang)}
-            sub={hasDay2 ? (lang==="es"?"Un código distinto para cada día.":"A different dress code for each day.") : ""}
-          />
-          <div className="dr-grid" style={{display:"grid",gridTemplateColumns:hasDay2?"1fr 1fr":"1fr",gap:28,maxWidth:hasDay2?980:640,margin:"0 auto"}}>
-            <FixedDressCard d={data.dress} swatches={FIXED_DRESS_SWATCHES_DAY1} lang={lang} L={L} />
-            {hasDay2 && <FixedDressCard d={data.dress2} swatches={FIXED_DRESS_SWATCHES_DAY2} lang={lang} L={L} />}
-          </div>
-        </div>
-        <style>{`@media (max-width:720px){ .dr-grid{ grid-template-columns: 1fr !important; } }`}</style>
-      </section>
-    );
-  }
-
-  try { DressCard = FixedDressCard; DressSection = FixedDressSection; } catch(e) {}
-  window.DressSection = FixedDressSection;
-}
 
 if (typeof EventCard !== "undefined") {
   function EventsSectionWithIcebreaker({ data, L, lang }) {
