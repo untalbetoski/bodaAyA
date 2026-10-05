@@ -273,7 +273,7 @@ function EventsSection({ data, L, lang }) {
 
 // DRESS CODE ──────────────────────────────────────────────────────────────
 const DRESS_SWATCHES_DAY1 = [
-  { c:"#ffbb7c", es:"Naranja Anteado", en:"Sunset Orange" },
+  { c:"#ffbb7c", es:"Naranja", en:"Orange" },
   { c:"#f6d0b4", es:"Durazno", en:"Peach" },
   { c:"#fdfd96", es:"Amarillo", en:"Yellow" },
   { c:"#fc6c85", es:"Sandía", en:"Watermelon" },
@@ -318,7 +318,7 @@ function DressCard({ d, swatches, lang, L }) {
           {swatches.map((sw,i) => (
             <div key={i} style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:6 }}>
               <div style={{ width:"100%", aspectRatio:"1", background:sw.c, borderRadius:"50%", boxShadow:"inset 0 -6px 14px rgba(0,0,0,.08)" }}></div>
-              <div className="dress-swatch-label" style={{fontFamily:"Arial, sans-serif",fontSize:"9px",letterSpacing:"0",textTransform:"none",whiteSpace:"nowrap",fontWeight:400,lineHeight:"10px",transform:"scale(.72)",transformOrigin:"top center",width:"138%",marginLeft:"-19%"}}>{lang==="es" ? sw.es : sw.en}</div>
+              <span style={{fontFamily:"Arial, sans-serif",fontSize:6,fontWeight:400,letterSpacing:0,textTransform:"none",whiteSpace:"nowrap",lineHeight:1,color:"var(--ink-soft)"}}>{sw[lang]}</span>
             </div>
           ))}
         </div>
@@ -348,7 +348,7 @@ function DressSection({ data, L, lang }) {
           {hasDay2 && <DressCard d={data.dress2} swatches={DRESS_SWATCHES_DAY2} lang={lang} L={L} />}
         </div>
       </div>
-      <style>{`\n        .dress-swatch-label{ font-family:var(--sans); font-size:5.5px !important; font-weight:400 !important; letter-spacing:0 !important; text-transform:none !important; white-space:nowrap !important; line-height:1 !important; text-align:center; color:var(--ink-soft); width:max-content; max-width:none; }\n        @media (max-width:720px){ .dr-grid{ grid-template-columns: 1fr !important; } .dress-swatch-label{ font-family:var(--sans); font-size:5.5px !important; font-weight:400 !important; letter-spacing:0 !important; text-transform:none !important; white-space:nowrap !important; line-height:1 !important; text-align:center; color:var(--ink-soft); width:max-content; max-width:none; } }\n      `}</style>
+      <style>{`@media (max-width:720px){ .dr-grid{ grid-template-columns:1fr !important; } }`}</style>
     </section>
   );
 }
