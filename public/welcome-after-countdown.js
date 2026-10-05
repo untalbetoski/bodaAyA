@@ -117,7 +117,22 @@
       setTimeout(function(){ observer.disconnect(); mount(); }, 15000);
     }
 
-    document.addEventListener('click', function(e){ if (e.target && e.target.closest && e.target.closest('.lang-toggle')) setTimeout(apply, 0); });
+    document.addEventListener('click', function(e){
+      if (e.target && e.target.closest && e.target.closest('.lang-toggle')) {
+        [0, 50, 150, 350].forEach(function(delay){
+          setTimeout(function(){ mount(); apply(); }, delay);
+        });
+      }
+    });
+
+    // React can reconcile away this injected section when language/state changes.
+    // Keep it mounted and re-apply the active language after those renders.
+    var remountObserver = new MutationObserver(function(){
+      if (!document.getElementById('aa-welcome-message')) {
+        setTimeout(function(){ mount(); apply(); }, 0);
+      }
+    });
+    remountObserver.observe(document.documentElement, { childList:true, subtree:true });
 
     window.addEventListener('aa:content-updated', function(e){
       welcome = normalize((e && e.detail && e.detail.data) || {});
