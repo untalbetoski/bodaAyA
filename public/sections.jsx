@@ -287,8 +287,10 @@ const DRESS_SWATCHES_DAY2 = [
   { c:"#d3d3d3", es:"Gris", en:"Gray" },
 ];
 
-function dressColorName(label, lang) {
-  if (lang === "es") return label;
+function dressColorName(sw, lang) {
+  const raw = String((sw && (sw.l || sw.es || sw.en)) || "").trim();
+  if (lang === "es") return (sw && sw.es) || raw;
+  if (sw && sw.en) return sw.en;
   const map = {
     "Durazno":"Peach","Verde":"Green","Lila":"Lilac","Azul":"Blue","Rosa":"Pink",
     "Rojo":"Red","Fucsia":"Fuchsia","Café":"Brown","Cafe":"Brown",
@@ -296,7 +298,7 @@ function dressColorName(label, lang) {
     "Marfil":"Ivory","Caqui":"Khaki","Crudo":"Ecru","Lino":"Linen","Gris":"Gray",
     "Ivory":"Ivory","Khaki":"Khaki"
   };
-  return map[label] || label;
+  return map[raw] || raw;
 }
 
 function DressCard({ d, swatches, lang, L }) {
@@ -319,7 +321,7 @@ function DressCard({ d, swatches, lang, L }) {
             <div className="dress-swatch-item" key={i} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4,minWidth:0}}>
               <div className="dress-color-dot" style={{width:38,height:38,background:sw.c,borderRadius:"50%",boxShadow:"inset 0 -6px 14px rgba(0,0,0,.08)",flex:"0 0 38px"}}></div>
               <span className="dress-swatch-label" style={{fontFamily:"Arial, sans-serif",fontSize:"6px",fontWeight:400,letterSpacing:0,textTransform:"none",whiteSpace:"nowrap",lineHeight:1,textAlign:"center",width:"auto",overflow:"visible"}}>
-                {dressColorName(sw.l || sw.es || sw.en || "", lang)}
+                {dressColorName(sw, lang)}
               </span>
             </div>
           ))}
